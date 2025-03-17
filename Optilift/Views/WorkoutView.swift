@@ -10,12 +10,27 @@ struct WorkoutView: View {
     @State private var editingSet: CDWorkoutSet?
     @State private var showingSetEditor = false
     @State private var showingFinishConfirmation = false
+    @FocusState private var focusedField: Field?
+    
+    private let kgToLbsMultiplier = 2.20462
+    
+    private let numberFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0
+        return formatter
+    }()
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \CDWorkoutSet.date, ascending: true)],
-        predicate: NSPredicate(format: "workout == nil && date >= %@", Calendar.current.startOfDay(for: Date()) as NSDate)
+        predicate: NSPredicate(format: "workout == nil AND date >= %@", Calendar.current.startOfDay(for: Date()) as NSDate),
+        animation: .default
     )
     private var todaysSets: FetchedResults<CDWorkoutSet>
+    
+    enum Field {
+        case reps, weight
+    }
     
     var body: some View {
         List {
@@ -35,9 +50,11 @@ struct WorkoutView: View {
                 HStack {
                     TextField("Reps", text: $reps)
                         .keyboardType(.numberPad)
+                        .focused($focusedField, equals: .reps)
                     Divider()
-                    TextField("Weight (kg)", text: $weight)
+                    TextField("Weight (lbs)", text: $weight)
                         .keyboardType(.decimalPad)
+                        .focused($focusedField, equals: .weight)
                 }
                 
                 Button(action: addSet) {
@@ -55,11 +72,11 @@ struct WorkoutView: View {
                                 VStack(alignment: .leading) {
                                     Text(set.exercise?.name ?? "Unknown")
                                         .font(.headline)
-                                    Text("\(set.reps) reps × \(String(format: "%.1f", set.weight))kg")
+                                    Text("\(set.reps) reps × \(formatWeight(set.weight * kgToLbsMultiplier)) lbs")
                                         .foregroundColor(.secondary)
                                 }
                                 Spacer()
-                                Text("Vol: \(String(format: "%.1f", Double(set.reps) * set.weight))kg")
+                                Text("Vol: \(formatWeight(Double(set.reps) * set.weight * kgToLbsMultiplier)) lbs")
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -71,7 +88,7 @@ struct WorkoutView: View {
                     HStack {
                         Text("Total Volume")
                         Spacer()
-                        Text("\(String(format: "%.1f", totalVolume))kg")
+                        Text("\(formatWeight(totalVolume * kgToLbsMultiplier)) lbs")
                             .bold()
                     }
                     
@@ -89,11 +106,10 @@ struct WorkoutView: View {
                 ExercisePickerView(selectedExercise: $selectedExercise)
             }
         }
-        .sheet(isPresented: $showingSetEditor) {
-            if let set = editingSet {
-                NavigationStack {
-                    SetEditorView(set: set)
-                }
+        .sheet(item: $editingSet) { set in
+            NavigationStack {
+                SimpleSetEditor(set: set, isPresented: $showingSetEditor)
+                    .environment(\.managedObjectContext, viewContext)
             }
         }
         .alert("Finish Workout", isPresented: $showingFinishConfirmation) {
@@ -102,25 +118,53 @@ struct WorkoutView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Save this workout with \(todaysSets.count) sets and a total volume of \(String(format: "%.1f", totalVolume))kg?")
+            Text("Save this workout with \(todaysSets.count) sets and a total volume of \(formatWeight(totalVolume * kgToLbsMultiplier)) lbs?")
+        }
+        .overlay {
+            if focusedField != nil {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button("Done") {
+                            focusedField = nil
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemBackground))
+                    }
+                    .background(.bar)
+                }
+                .transition(.move(edge: .bottom))
+                .animation(.easeInOut, value: focusedField != nil)
+            }
         }
     }
     
+    private func formatWeight(_ weight: Double) -> String {
+        guard !weight.isNaN && !weight.isInfinite else { return "0" }
+        return numberFormatter.string(from: NSNumber(value: weight)) ?? "0"
+    }
+    
     private var totalVolume: Double {
-        todaysSets.reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
+        todaysSets.reduce(0.0) { total, set in
+            let setVolume = Double(set.reps) * set.weight
+            return setVolume.isNaN || setVolume.isInfinite ? total : total + setVolume
+        }
     }
     
     private func addSet() {
         guard let exercise = selectedExercise,
-              let repsInt = Int32(reps),
-              let weightDouble = Double(weight)
+              let repsInt = Int32(reps), repsInt > 0,
+              let weightDouble = Double(weight), weightDouble > 0,
+              !weightDouble.isNaN, !weightDouble.isInfinite
         else { return }
         
         let newSet = CDWorkoutSet(context: viewContext)
         newSet.id = UUID()
         newSet.exercise = exercise
         newSet.reps = repsInt
-        newSet.weight = weightDouble
+        newSet.weight = weightDouble / kgToLbsMultiplier // Convert to kg for storage
         newSet.date = Date()
         
         do {
@@ -167,59 +211,39 @@ struct WorkoutView: View {
     }
 }
 
-struct SetEditorView: View {
-    @Environment(\.managedObjectContext) private var viewContext
+struct SimpleSetEditor: View {
+    @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) private var dismiss
     let set: CDWorkoutSet
+    @Binding var isPresented: Bool
     
     @State private var reps: String
-    @State private var weight: String
-    @State private var notes: String
-    @FocusState private var focusedField: Field?
+    @State private var weightLbs: String
     
-    enum Field {
-        case reps, weight, notes
-    }
-    
-    init(set: CDWorkoutSet) {
+    init(set: CDWorkoutSet, isPresented: Binding<Bool>) {
         self.set = set
-        _reps = State(initialValue: String(set.reps))
-        _weight = State(initialValue: String(format: "%.1f", set.weight))
-        _notes = State(initialValue: set.notes ?? "")
+        self._isPresented = isPresented
+        _reps = State(initialValue: "\(set.reps)")
+        _weightLbs = State(initialValue: String(format: "%.1f", set.weight * 2.20462))
     }
     
     var body: some View {
         Form {
-            Section {
-                TextField("Reps", text: $reps)
-                    .keyboardType(.numberPad)
-                    .focused($focusedField, equals: .reps)
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Next") {
-                                focusedField = .weight
-                            }
-                        }
-                    }
+            Section("Exercise Details") {
+                Text(set.exercise?.name ?? "Unknown")
+                    .font(.headline)
                 
-                TextField("Weight (kg)", text: $weight)
-                    .keyboardType(.decimalPad)
-                    .focused($focusedField, equals: .weight)
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Done") {
-                                focusedField = nil
-                            }
-                        }
-                    }
-            }
-            
-            Section("Notes (Optional)") {
-                TextEditor(text: $notes)
-                    .frame(height: 100)
-                    .focused($focusedField, equals: .notes)
+                HStack {
+                    Text("Reps:")
+                    TextField("Enter reps", text: $reps)
+                        .keyboardType(.numberPad)
+                }
+                
+                HStack {
+                    Text("Weight (lbs):")
+                    TextField("Enter weight", text: $weightLbs)
+                        .keyboardType(.decimalPad)
+                }
             }
         }
         .navigationTitle("Edit Set")
@@ -227,39 +251,22 @@ struct SetEditorView: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {
+                    isPresented = false
                     dismiss()
                 }
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save") {
-                    saveChanges()
+                    if let reps = Int32(reps), let weight = Double(weightLbs) {
+                        set.reps = reps
+                        set.weight = weight / 2.20462 // Convert to kg
+                        try? viewContext.save()
+                        isPresented = false
+                        dismiss()
+                    }
                 }
-                .disabled(!isValid)
+                .disabled(reps.isEmpty || weightLbs.isEmpty)
             }
-        }
-    }
-    
-    private var isValid: Bool {
-        guard let repsInt = Int32(reps), repsInt > 0,
-              let weightDouble = Double(weight), weightDouble > 0 else {
-            return false
-        }
-        return true
-    }
-    
-    private func saveChanges() {
-        guard let repsInt = Int32(reps),
-              let weightDouble = Double(weight) else { return }
-        
-        set.reps = repsInt
-        set.weight = weightDouble
-        set.notes = notes.isEmpty ? nil : notes
-        
-        do {
-            try viewContext.save()
-            dismiss()
-        } catch {
-            print("Error saving changes: \(error)")
         }
     }
 }
@@ -309,5 +316,27 @@ struct ExercisePickerView: View {
             }
         }
     }
-} 
-} 
+}
+
+#Preview("WorkoutView") {
+    NavigationStack {
+        WorkoutView()
+            .environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
+    }
+}
+
+#Preview("SetEditorView") {
+    NavigationStack {
+        let context = PersistenceController.shared.container.viewContext
+        let set = CDWorkoutSet(context: context)
+        set.reps = 10
+        set.weight = 100.0
+        set.date = Date()
+        let exercise = CDExercise(context: context)
+        exercise.name = "Bench Press"
+        exercise.category = "Chest"
+        set.exercise = exercise
+        return SimpleSetEditor(set: set, isPresented: .constant(true))
+            .environment(\.managedObjectContext, context)
+    }
+}

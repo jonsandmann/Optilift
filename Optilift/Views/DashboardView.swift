@@ -12,6 +12,13 @@ struct DashboardView: View {
     @FetchRequest private var thisWeekWorkouts: FetchedResults<CDWorkout>
     @FetchRequest private var lastWeekWorkouts: FetchedResults<CDWorkout>
     
+    private let kgToLbsMultiplier = 2.20462
+    
+    private func formatVolume(_ volumeKg: Double) -> String {
+        let volumeLbs = volumeKg * kgToLbsMultiplier
+        return NumberFormatter.volumeFormatter.string(from: NSNumber(value: volumeLbs)) ?? "0"
+    }
+    
     init() {
         let calendar = Calendar.current
         let now = Date()
@@ -99,7 +106,7 @@ struct DashboardView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Today's Volume")
                         .font(.headline)
-                    Text("\(String(format: "%.1f", todaysVolume))kg")
+                    Text("\(formatVolume(todaysVolume)) lbs")
                         .font(.system(size: 34, weight: .bold))
                 }
                 .padding(.vertical, 8)
@@ -147,16 +154,28 @@ struct DashboardView: View {
                         ForEach(monthlyVolumes(), id: \.date) { item in
                             BarMark(
                                 x: .value("Month", item.date, unit: .month),
-                                y: .value("Volume", item.volume)
+                                y: .value("Volume", item.volume * kgToLbsMultiplier)
                             )
                         }
                     }
                     .frame(height: 200)
-                    .chartXAxis {
-                        AxisMarks(values: .stride(by: .month)) { value in
-                            AxisValueLabel(format: .dateTime.month(.abbreviated))
+                    .chartYAxis {
+                        AxisMarks(position: .leading) { value in
+                            AxisGridLine()
+                            AxisValueLabel {
+                                if let volume = value.as(Double.self) {
+                                    Text(NumberFormatter.volumeFormatter.string(from: NSNumber(value: volume)) ?? "")
+                                }
+                            }
                         }
                     }
+                    .chartXAxis {
+                        AxisMarks(values: .stride(by: .month)) { value in
+                            AxisGridLine()
+                            AxisValueLabel(format: .dateTime.month(.abbreviated), centered: true)
+                        }
+                    }
+                    .padding(.top)
                 } else {
                     Text("Start logging workouts to see your volume trend")
                         .foregroundColor(.secondary)
@@ -183,6 +202,17 @@ struct DashboardView: View {
             .map { ($0.key, $0.value) }
             .sorted { $0.0 < $1.0 }
     }
+}
+
+extension NumberFormatter {
+    static let volumeFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0
+        formatter.groupingSeparator = ","
+        formatter.usesGroupingSeparator = true
+        return formatter
+    }()
 }
 
 // MARK: - Helper Views
