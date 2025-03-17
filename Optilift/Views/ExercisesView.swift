@@ -4,6 +4,7 @@ import CoreData
 struct ExercisesView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State private var showingAddExercise = false
+    @State private var showingImportData = false
     @State private var searchText = ""
     
     @FetchRequest(
@@ -51,7 +52,15 @@ struct ExercisesView: View {
         .searchable(text: $searchText, prompt: "Search exercises")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button(action: { showingAddExercise = true }) {
+                Menu {
+                    Button(action: { showingAddExercise = true }) {
+                        Label("Add Exercise", systemImage: "plus")
+                    }
+                    
+                    Button(action: { showingImportData = true }) {
+                        Label("Import Data", systemImage: "square.and.arrow.down")
+                    }
+                } label: {
                     Image(systemName: "plus")
                 }
             }
@@ -60,6 +69,9 @@ struct ExercisesView: View {
             NavigationStack {
                 AddExerciseView()
             }
+        }
+        .sheet(isPresented: $showingImportData) {
+            ImportDataView()
         }
         .navigationDestination(for: CDExercise.self) { exercise in
             ExerciseDetailView(exercise: exercise)

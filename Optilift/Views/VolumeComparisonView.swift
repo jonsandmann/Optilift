@@ -5,8 +5,6 @@ struct VolumeComparisonView: View {
     let currentValue: Double
     let previousValue: Double
     
-    private let kgToLbsMultiplier = 2.20462
-    
     private var percentageChange: Double {
         guard previousValue > 0 else { return 0 }
         return ((currentValue - previousValue) / previousValue) * 100
@@ -16,8 +14,7 @@ struct VolumeComparisonView: View {
         percentageChange >= 0
     }
     
-    private func formatVolume(_ volumeKg: Double) -> String {
-        let volumeLbs = volumeKg * kgToLbsMultiplier
+    private func formatVolume(_ volumeLbs: Double) -> String {
         return NumberFormatter.volumeFormatter.string(from: NSNumber(value: volumeLbs)) ?? "0"
     }
     

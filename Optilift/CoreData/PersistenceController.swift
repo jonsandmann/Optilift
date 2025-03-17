@@ -1,5 +1,14 @@
 import CoreData
 
+// Add Date extension for random date generation
+extension Date {
+    static func random(in range: Range<Date>) -> Date {
+        let diff = range.upperBound.timeIntervalSinceReferenceDate - range.lowerBound.timeIntervalSinceReferenceDate
+        let randomValue = Double.random(in: 0..<diff)
+        return range.lowerBound.addingTimeInterval(randomValue)
+    }
+}
+
 struct PersistenceController {
     static let shared = PersistenceController()
     
@@ -9,7 +18,7 @@ struct PersistenceController {
         container = NSPersistentContainer(name: "OptiliftModel")
         
         if inMemory {
-            container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
+            container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
         }
         
         container.loadPersistentStores { description, error in
@@ -64,5 +73,25 @@ struct PersistenceController {
         }
         
         save()
+    }
+    
+    func clearAllData() {
+        let entities = container.managedObjectModel.entities
+        entities.forEach { entity in
+            let request = NSFetchRequest<NSFetchRequestResult>(entityName: entity.name!)
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
+            
+            do {
+                try container.viewContext.execute(deleteRequest)
+            } catch {
+                print("Error deleting \(entity.name!): \(error)")
+            }
+        }
+        
+        do {
+            try container.viewContext.save()
+        } catch {
+            print("Error saving context after clearing data: \(error)")
+        }
     }
 } 
