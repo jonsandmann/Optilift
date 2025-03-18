@@ -2,6 +2,28 @@ import SwiftUI
 import Charts
 import CoreData
 
+enum TimeRange: Int, CaseIterable {
+    case oneMonth = 1
+    case threeMonths = 3
+    case sixMonths = 6
+    case twelveMonths = 12
+    case twentyFourMonths = 24
+    
+    var title: String {
+        switch self {
+        case .oneMonth: return "1M"
+        case .threeMonths: return "3M"
+        case .sixMonths: return "6M"
+        case .twelveMonths: return "1Y"
+        case .twentyFourMonths: return "2Y"
+        }
+    }
+    
+    var shouldShowDailyData: Bool {
+        self == .oneMonth
+    }
+}
+
 struct DashboardView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @FetchRequest private var todaysWorkoutSets: FetchedResults<CDWorkoutSet>
@@ -15,22 +37,6 @@ struct DashboardView: View {
     @State private var showingAddWorkout = false
     @State private var selectedCurrentVolume: Double = 0
     @State private var selectedPreviousVolume: Double = 0
-    
-    enum TimeRange: Int, CaseIterable {
-        case threeMonths = 3
-        case sixMonths = 6
-        case twelveMonths = 12
-        case twentyFourMonths = 24
-        
-        var title: String {
-            switch self {
-            case .threeMonths: return "3M"
-            case .sixMonths: return "6M"
-            case .twelveMonths: return "1Y"
-            case .twentyFourMonths: return "2Y"
-            }
-        }
-    }
     
     private func formatVolume(_ volumeLbs: Double) -> String {
         return NumberFormatter.volumeFormatter.string(from: NSNumber(value: volumeLbs)) ?? "0"
@@ -336,7 +342,11 @@ struct DashboardView: View {
                         .pickerStyle(.segmented)
                         .padding(.bottom, 4)
                         
-                        VolumeTrendChart(volumes: monthlyVolumes())
+                        if selectedTimeRange == .oneMonth {
+                            VolumeTrendChart(volumes: monthlyVolumes())
+                        } else {
+                            MonthlyVolumeChart(volumes: monthlyVolumes(), timeRange: selectedTimeRange)
+                        }
                     }
                 }
             }
@@ -349,8 +359,8 @@ struct DashboardView: View {
         let now = Date()
         let monthsAgo = calendar.date(byAdding: .month, value: -selectedTimeRange.rawValue, to: now)!
         
-        // Create a dictionary to store monthly volumes
-        var monthlyVolumeDict: [Date: Double] = [:]
+        // Create a dictionary to store volumes
+        var volumeDict: [Date: Double] = [:]
         
         // Get all sets from Core Data
         let allSetsFetchRequest: NSFetchRequest<CDWorkoutSet> = CDWorkoutSet.fetchRequest()
@@ -364,16 +374,24 @@ struct DashboardView: View {
             
             for set in filteredSets {
                 guard let date = set.date else { continue }
-                let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: date))!
                 let setVolume = Double(set.reps) * set.weight
-                monthlyVolumeDict[monthStart, default: 0] += setVolume
+                
+                if selectedTimeRange == .oneMonth {
+                    // For 1M view, group by day
+                    let dayStart = calendar.startOfDay(for: date)
+                    volumeDict[dayStart, default: 0] += setVolume
+                } else {
+                    // For all other views (3M, 6M, 1Y, 2Y), group by month
+                    let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: date))!
+                    volumeDict[monthStart, default: 0] += setVolume
+                }
             }
         } catch {
             print("Error fetching sets: \(error)")
         }
         
         // Convert dictionary to array and sort by date
-        return monthlyVolumeDict.map { ($0.key, $0.value) }
+        return volumeDict.map { ($0.key, $0.value) }
             .sorted { $0.0 < $1.0 }
     }
 }
@@ -397,7 +415,15 @@ struct VolumeTrendChart: View {
     
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
-        formatter.dateFormat = volumes.count > 12 ? "MMM yy" : "MMM"
+        if volumes.count <= 31 { // Daily data
+            formatter.dateFormat = "MMM d" // Show month and day to avoid confusion
+        } else if volumes.count <= 6 { // Monthly data for 3M/6M
+            formatter.dateFormat = "MMM" // Show month abbreviation
+        } else if volumes.count <= 12 { // Monthly data for 1Y
+            formatter.dateFormat = "MMM" // Show month abbreviation
+        } else { // Monthly data for 2Y
+            formatter.dateFormat = "MMM yy" // Show month and year
+        }
         return formatter
     }
     
@@ -406,9 +432,20 @@ struct VolumeTrendChart: View {
     }
     
     private var yAxisValues: [Double] {
-        let step = maxVolume > 0 ? maxVolume / 4 : 1000 // Default to 1000 if no data
-        let roundedStep = round(step / 1000) * 1000 // Round to nearest 1000 for clean numbers
-        let values = stride(from: 0, through: maxVolume, by: roundedStep).map { $0 }
+        if maxVolume == 0 {
+            return [0, 100, 200, 300, 400, 500] // Default values for no data
+        }
+        
+        let step: Double
+        if maxVolume < 1000 {
+            step = max(round(maxVolume / 4 / 100) * 100, 100) // Round to nearest 100 for small volumes
+        } else if maxVolume < 10000 {
+            step = max(round(maxVolume / 4 / 1000) * 1000, 1000) // Round to nearest 1000 for medium volumes
+        } else {
+            step = max(round(maxVolume / 4 / 10000) * 10000, 10000) // Round to nearest 10000 for large volumes
+        }
+        
+        let values = stride(from: 0, through: maxVolume, by: step).map { $0 }
         // Ensure we include the max value if it's not already included
         if let lastValue = values.last, lastValue < maxVolume {
             return values + [maxVolume]
@@ -426,16 +463,22 @@ struct VolumeTrendChart: View {
     }
     
     private var xAxisStride: Int {
-        // Show every label for 3M and 6M views
-        if volumes.count <= 6 { return 1 }
-        // Show every third label for 1Y view
-        if volumes.count <= 12 { return 3 }
-        // Show every fourth label for 2Y view
-        return 4
+        if volumes.count <= 31 { // Daily data
+            return max(1, volumes.count / 5) // Show about 5 labels for daily data
+        } else if volumes.count <= 6 { // Monthly data for 3M/6M
+            return 1 // Show every month
+        } else if volumes.count <= 12 { // Monthly data for 1Y
+            return 2 // Show every other month
+        }
+        return 3 // Show every third month for 2Y
     }
     
     private var shouldCenterLabels: Bool {
         volumes.count <= 6 // Center labels for 3M and 6M views
+    }
+    
+    private var isDailyData: Bool {
+        volumes.count <= 31
     }
     
     var body: some View {
@@ -448,7 +491,7 @@ struct VolumeTrendChart: View {
             Chart {
                 ForEach(volumes, id: \.date) { item in
                     BarMark(
-                        x: .value("Month", item.date, unit: .month),
+                        x: .value("Date", item.date, unit: isDailyData ? .day : .month),
                         y: .value("Volume", item.volume)
                     )
                     .foregroundStyle(Color.blue)
@@ -459,7 +502,7 @@ struct VolumeTrendChart: View {
                 AxisMarks(
                     preset: shouldCenterLabels ? .automatic : .aligned,
                     position: .bottom,
-                    values: shouldCenterLabels ? .automatic : .stride(by: .month, count: xAxisStride)
+                    values: .stride(by: isDailyData ? .day : .month, count: xAxisStride)
                 ) { value in
                     if value.as(Date.self) == volumes.first?.date {
                         AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
@@ -474,11 +517,15 @@ struct VolumeTrendChart: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .offset(y: 4)
+                    .offset(y: shouldCenterLabels ? 4 : 8) // Increase offset for non-centered labels
                 }
             }
+            .chartXScale(domain: ClosedRange(uncheckedBounds: (volumes.first?.date ?? Date(), volumes.last?.date ?? Date())))
             .chartYAxis {
-                AxisMarks(position: .leading, values: yAxisValues) { value in
+                AxisMarks(
+                    position: .leading,
+                    values: .automatic(desiredCount: 4)
+                ) { value in
                     if value.as(Double.self) == 0 {
                         AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
                     } else {
@@ -487,6 +534,98 @@ struct VolumeTrendChart: View {
                     AxisTick(stroke: StrokeStyle(lineWidth: 1))
                     AxisValueLabel {
                         if let volume = value.as(Double.self) {
+                            Text(formatVolume(volume))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .padding(.top)
+        }
+    }
+}
+
+struct MonthlyVolumeChart: View {
+    let volumes: [(date: Date, volume: Double)]
+    let timeRange: TimeRange
+    
+    private var dateFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        if timeRange == .twentyFourMonths {
+            formatter.dateFormat = "MMM yy"
+        } else {
+            formatter.dateFormat = "MMM"
+        }
+        return formatter
+    }
+    
+    private var maxVolume: Double {
+        volumes.map { $0.volume }.max() ?? 0
+    }
+    
+    private func formatVolume(_ volume: Double) -> String {
+        if volume >= 1_000_000 {
+            return String(format: "%.0fM", volume / 1_000_000)
+        } else if volume >= 1_000 {
+            return String(format: "%.0fK", volume / 1_000)
+        }
+        return NumberFormatter.volumeFormatter.string(from: NSNumber(value: volume)) ?? "0"
+    }
+    
+    private func shouldShowLabel(for index: Int) -> Bool {
+        switch timeRange {
+        case .threeMonths, .sixMonths:
+            return true // Show all labels
+        case .twelveMonths:
+            return index % 3 == 0 // Show every third month
+        case .twentyFourMonths:
+            return index % 6 == 0 // Show every sixth month
+        case .oneMonth:
+            return true
+        }
+    }
+    
+    var body: some View {
+        if volumes.isEmpty {
+            Text("No data available")
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding()
+        } else {
+            Chart {
+                ForEach(Array(volumes.enumerated()), id: \.element.date) { index, item in
+                    BarMark(
+                        x: .value("Month", dateFormatter.string(from: item.date)),
+                        y: .value("Volume", item.volume)
+                    )
+                    .foregroundStyle(Color.blue)
+                }
+            }
+            .frame(height: 200)
+            .chartXAxis {
+                AxisMarks { value in
+                    if let month = value.as(String.self),
+                       let index = volumes.firstIndex(where: { dateFormatter.string(from: $0.date) == month }),
+                       shouldShowLabel(for: index) {
+                        AxisValueLabel {
+                            Text(month)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .offset(y: 4)
+                    }
+                }
+            }
+            .chartYAxis {
+                AxisMarks(
+                    position: .leading,
+                    values: .automatic(desiredCount: 4)
+                ) { value in
+                    if let volume = value.as(Double.self) {
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
+                        AxisTick(stroke: StrokeStyle(lineWidth: 1))
+                        AxisValueLabel {
                             Text(formatVolume(volume))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
