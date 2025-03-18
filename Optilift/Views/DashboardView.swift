@@ -217,73 +217,126 @@ struct DashboardView: View {
             }
             
             Section("Monthly Comparison") {
-                VStack(alignment: .leading, spacing: 12) {
-                    let volumes = getCumulativeVolumes()
-                    VolumeComparisonView(
-                        title: "Month to Date",
-                        currentValue: selectedCurrentVolume,
-                        previousValue: selectedPreviousVolume
-                    )
-                    
-                    CumulativeVolumeChart(
-                        currentMonthData: volumes.current,
-                        lastMonthData: volumes.last,
-                        currentValue: $selectedCurrentVolume,
-                        previousValue: $selectedPreviousVolume
-                    )
-                    .onAppear {
-                        selectedCurrentVolume = volumes.current.last?.volume ?? 0
-                        selectedPreviousVolume = volumes.last.last?.volume ?? 0
+                if thisYearSets.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "chart.bar")
+                            .font(.system(size: 40))
+                            .foregroundColor(.blue)
+                        Text("No monthly data available")
+                            .font(.headline)
+                        Text("Start logging workouts to see your progress")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                } else {
+                    VStack(alignment: .leading, spacing: 12) {
+                        let volumes = getCumulativeVolumes()
+                        VolumeComparisonView(
+                            title: "Month to Date",
+                            currentValue: selectedCurrentVolume,
+                            previousValue: selectedPreviousVolume
+                        )
+                        
+                        CumulativeVolumeChart(
+                            currentMonthData: volumes.current,
+                            lastMonthData: volumes.last,
+                            currentValue: $selectedCurrentVolume,
+                            previousValue: $selectedPreviousVolume
+                        )
+                        .onAppear {
+                            selectedCurrentVolume = volumes.current.last?.volume ?? 0
+                            selectedPreviousVolume = volumes.last.last?.volume ?? 0
+                        }
                     }
                 }
             }
             
             Section("Yearly Comparison") {
-                VolumeComparisonView(
-                    title: "Year to Date",
-                    currentValue: thisYearVolume,
-                    previousValue: lastYearVolume
-                )
+                if thisYearSets.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: 40))
+                            .foregroundColor(.blue)
+                        Text("No yearly data available")
+                            .font(.headline)
+                        Text("Track your progress over time")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                } else {
+                    VolumeComparisonView(
+                        title: "Year to Date",
+                        currentValue: thisYearVolume,
+                        previousValue: lastYearVolume
+                    )
+                }
             }
             
             Section("Weekly Activity") {
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("This Week")
+                if thisWeekWorkouts.isEmpty && lastWeekWorkouts.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 40))
+                            .foregroundColor(.blue)
+                        Text("No weekly activity")
+                            .font(.headline)
+                        Text("Start logging workouts to track your activity")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                        Text("\(thisWeekWorkouts.count) workouts")
-                            .font(.headline)
                     }
-                    Spacer()
-                    VStack(alignment: .trailing) {
-                        Text("Last Week")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        Text("\(lastWeekWorkouts.count) workouts")
-                            .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                } else {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("This Week")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text("\(thisWeekWorkouts.count) workouts")
+                                .font(.headline)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing) {
+                            Text("Last Week")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text("\(lastWeekWorkouts.count) workouts")
+                                .font(.headline)
+                        }
                     }
                 }
             }
             
             Section("Volume Trend") {
-                VStack(alignment: .leading, spacing: 12) {
-                    // Time range selector
-                    Picker("Time Range", selection: $selectedTimeRange) {
-                        ForEach(TimeRange.allCases, id: \.self) { range in
-                            Text(range.title).tag(range)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.bottom, 4)
-                    
-                    if !thisYearSets.isEmpty {
-                        VolumeTrendChart(volumes: monthlyVolumes())
-                    } else {
-                        Text("Start logging workouts to see your volume trend")
+                if thisYearSets.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "chart.bar.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(.blue)
+                        Text("No volume trend data")
+                            .font(.headline)
+                        Text("Log workouts to see your volume trends")
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                } else {
+                    VStack(alignment: .leading, spacing: 12) {
+                        // Time range selector
+                        Picker("Time Range", selection: $selectedTimeRange) {
+                            ForEach(TimeRange.allCases, id: \.self) { range in
+                                Text(range.title).tag(range)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .padding(.bottom, 4)
+                        
+                        VolumeTrendChart(volumes: monthlyVolumes())
                     }
                 }
             }
@@ -353,7 +406,7 @@ struct VolumeTrendChart: View {
     }
     
     private var yAxisValues: [Double] {
-        let step = maxVolume / 4 // Create 4 major grid lines
+        let step = maxVolume > 0 ? maxVolume / 4 : 1000 // Default to 1000 if no data
         let roundedStep = round(step / 1000) * 1000 // Round to nearest 1000 for clean numbers
         let values = stride(from: 0, through: maxVolume, by: roundedStep).map { $0 }
         // Ensure we include the max value if it's not already included

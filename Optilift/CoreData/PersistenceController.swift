@@ -1,15 +1,6 @@
 import CoreData
 import CloudKit
 
-// Add Date extension for random date generation
-extension Date {
-    static func random(in range: Range<Date>) -> Date {
-        let diff = range.upperBound.timeIntervalSinceReferenceDate - range.lowerBound.timeIntervalSinceReferenceDate
-        let randomValue = Double.random(in: 0..<diff)
-        return range.lowerBound.addingTimeInterval(randomValue)
-    }
-}
-
 class PersistenceController {
     static let shared = PersistenceController()
     
@@ -28,7 +19,7 @@ class PersistenceController {
         }
         
         // Set up CloudKit container
-        let cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.jonsandmann.Optilift")
+        let cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.optimizedliving.Optilift")
         cloudKitContainerOptions.databaseScope = .private
         description.cloudKitContainerOptions = cloudKitContainerOptions
         
@@ -38,12 +29,18 @@ class PersistenceController {
                 fatalError("Error: \(error.localizedDescription)")
             }
             
-            // Initialize CloudKit schema
+            // Initialize CloudKit schema with retry logic
             Task {
                 do {
+                    // First, try to reset the schema
+                    try await self.resetCloudKitSchema()
+                    // Then initialize the schema
                     try await self.container.initializeCloudKitSchema(options: [])
                 } catch {
                     print("Failed to initialize CloudKit schema: \(error)")
+                    // Try one more time after a delay
+                    try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 second delay
+                    try? await self.container.initializeCloudKitSchema(options: [])
                 }
             }
         }
@@ -77,7 +74,7 @@ class PersistenceController {
     }
     
     func checkCloudKitStatus() async throws -> CKAccountStatus {
-        let container = CKContainer(identifier: "iCloud.com.jonsandmann.Optilift")
+        let container = CKContainer(identifier: "iCloud.optimizedliving.Optilift")
         return try await container.accountStatus()
     }
     
@@ -111,29 +108,35 @@ class PersistenceController {
     }
     
     private func resetCloudKitSchema() async throws {
-        let cloudKitContainer = CKContainer(identifier: "iCloud.com.jonsandmann.Optilift")
+        let cloudKitContainer = CKContainer(identifier: "iCloud.optimizedliving.Optilift")
         let database = cloudKitContainer.privateCloudDatabase
         
         // First, try to delete all zones
-        let zones = try await database.allRecordZones()
-        for zone in zones {
-            try await database.deleteRecordZone(withID: zone.zoneID)
+        do {
+            let zones = try await database.allRecordZones()
+            for zone in zones {
+                try await database.deleteRecordZone(withID: zone.zoneID)
+            }
+        } catch {
+            print("Error deleting zones: \(error)")
+            // Continue even if deletion fails
         }
         
-        // Create a new default zone
+        // Create a new default zone with retry logic
         let defaultZone = CKRecordZone(zoneName: "com.apple.coredata.cloudkit.zone")
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            database.save(defaultZone) { zone, error in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume()
+        var retryCount = 0
+        while retryCount < 3 {
+            do {
+                try await database.save(defaultZone)
+                break
+            } catch {
+                retryCount += 1
+                if retryCount == 3 {
+                    throw error
                 }
+                try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
             }
         }
-        
-        // Reinitialize the schema
-        try await container.initializeCloudKitSchema(options: [])
     }
     
     private func cleanUpDuplicateExercises() {
