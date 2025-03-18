@@ -4,6 +4,9 @@ import CloudKit
 
 extension NSManagedObject {
     func toCKRecord() throws -> CKRecord {
+        // Ensure UUID is set before creating record
+        ensureUUID()
+        
         // Create a consistent record name using the entity name and UUID
         let recordName: String
         if let id = value(forKey: "id") as? UUID {
@@ -21,10 +24,13 @@ extension NSManagedObject {
             }
         }
         
-        // Add relationships
+        // Add relationships with better error handling
         for relationship in entity.relationshipsByName {
             if let value = value(forKey: relationship.key) {
                 if let relatedObject = value as? NSManagedObject {
+                    // Ensure related object has UUID
+                    relatedObject.ensureUUID()
+                    
                     let relatedRecordName: String
                     if let relatedId = relatedObject.value(forKey: "id") as? UUID {
                         relatedRecordName = "\(relatedObject.entity.name ?? "Unknown")-\(relatedId.uuidString)"
@@ -34,6 +40,21 @@ extension NSManagedObject {
                     let relatedRecordID = CKRecord.ID(recordName: relatedRecordName)
                     let reference = CKRecord.Reference(recordID: relatedRecordID, action: .deleteSelf)
                     record.setValue(reference, forKey: relationship.key)
+                } else if let relatedObjects = value as? Set<NSManagedObject> {
+                    // Handle to-many relationships
+                    var references: [CKRecord.Reference] = []
+                    for relatedObject in relatedObjects {
+                        relatedObject.ensureUUID()
+                        let relatedRecordName: String
+                        if let relatedId = relatedObject.value(forKey: "id") as? UUID {
+                            relatedRecordName = "\(relatedObject.entity.name ?? "Unknown")-\(relatedId.uuidString)"
+                        } else {
+                            relatedRecordName = relatedObject.objectID.uriRepresentation().absoluteString
+                        }
+                        let relatedRecordID = CKRecord.ID(recordName: relatedRecordName)
+                        references.append(CKRecord.Reference(recordID: relatedRecordID, action: .deleteSelf))
+                    }
+                    record.setValue(references, forKey: relationship.key)
                 }
             }
         }
@@ -63,31 +84,62 @@ extension NSManagedObject {
             }
         }
         
-        // Update relationships
+        // Update relationships with better error handling
         for (key, relationship) in entity.relationshipsByName {
             if let reference = record.value(forKey: key) as? CKRecord.Reference {
-                // Get the managed object context
-                guard let context = managedObjectContext else { continue }
-                
-                // Create a fetch request for the related object
-                let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: relationship.destinationEntity?.name ?? "")
-                let recordName = reference.recordID.recordName
-                if let uuidString = recordName.split(separator: "-").last,
-                   let uuid = UUID(uuidString: String(uuidString)) {
-                    fetchRequest.predicate = NSPredicate(format: "id == %@", uuid as CVarArg)
-                } else {
-                    fetchRequest.predicate = NSPredicate(format: "objectID.uriRepresentation.absoluteString == %@", recordName)
-                }
-                
-                // Fetch the related object
-                if let relatedObject = try? context.fetch(fetchRequest).first {
-                    setValue(relatedObject, forKey: key)
-                }
+                // Handle to-one relationship
+                try updateToOneRelationship(key: key, reference: reference, relationship: relationship)
+            } else if let references = record.value(forKey: key) as? [CKRecord.Reference] {
+                // Handle to-many relationship
+                try updateToManyRelationship(key: key, references: references, relationship: relationship)
             }
         }
         
         // Update the last modified date
         setValue(remoteLastModified, forKey: "lastModified")
+    }
+    
+    private func updateToOneRelationship(key: String, reference: CKRecord.Reference, relationship: NSPropertyDescription) throws {
+        guard let context = managedObjectContext,
+              let relationshipDescription = relationship as? NSRelationshipDescription,
+              let destinationEntity = relationshipDescription.destinationEntity?.name else { return }
+        
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: destinationEntity)
+        let recordName = reference.recordID.recordName
+        if let uuidString = recordName.split(separator: "-").last,
+           let uuid = UUID(uuidString: String(uuidString)) {
+            fetchRequest.predicate = NSPredicate(format: "id == %@", uuid as CVarArg)
+        } else {
+            fetchRequest.predicate = NSPredicate(format: "objectID.uriRepresentation.absoluteString == %@", recordName)
+        }
+        
+        if let relatedObject = try? context.fetch(fetchRequest).first {
+            setValue(relatedObject, forKey: key)
+        }
+    }
+    
+    private func updateToManyRelationship(key: String, references: [CKRecord.Reference], relationship: NSPropertyDescription) throws {
+        guard let context = managedObjectContext,
+              let relationshipDescription = relationship as? NSRelationshipDescription,
+              let destinationEntity = relationshipDescription.destinationEntity?.name else { return }
+        
+        var relatedObjects: Set<NSManagedObject> = []
+        for reference in references {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: destinationEntity)
+            let recordName = reference.recordID.recordName
+            if let uuidString = recordName.split(separator: "-").last,
+               let uuid = UUID(uuidString: String(uuidString)) {
+                fetchRequest.predicate = NSPredicate(format: "id == %@", uuid as CVarArg)
+            } else {
+                fetchRequest.predicate = NSPredicate(format: "objectID.uriRepresentation.absoluteString == %@", recordName)
+            }
+            
+            if let relatedObject = try? context.fetch(fetchRequest).first {
+                relatedObjects.insert(relatedObject)
+            }
+        }
+        
+        setValue(relatedObjects, forKey: key)
     }
     
     // Helper method to ensure UUID is set

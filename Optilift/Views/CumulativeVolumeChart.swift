@@ -14,17 +14,6 @@ struct CumulativeVolumeChart: View {
         return max(currentMax, lastMax)
     }
     
-    private var yAxisValues: [Double] {
-        let step = maxVolume / 4
-        let roundedStep = round(step / 500) * 500
-        let values = Array(stride(from: 0, through: maxVolume, by: roundedStep))
-        // Ensure we include the max value if it's not already included
-        if let lastValue = values.last, lastValue < maxVolume {
-            return values + [maxVolume]
-        }
-        return values
-    }
-    
     private func formatVolume(_ volume: Double) -> String {
         if volume >= 1_000_000 {
             return String(format: "%.0fM", volume / 1_000_000)
@@ -34,9 +23,13 @@ struct CumulativeVolumeChart: View {
         return NumberFormatter.volumeFormatter.string(from: NSNumber(value: volume)) ?? "0"
     }
     
-    private var chartData: [(date: Date, volume: Double, series: String)] {
-        let current = currentMonthData.map { (date: $0.date, volume: $0.volume, series: "Current") }
-        let last = lastMonthData.map { (date: $0.date, volume: $0.volume, series: "Last Month") }
+    private var chartData: [(day: Int, volume: Double, series: String)] {
+        // Process current month data
+        let current = currentMonthData.map { (day: Calendar.current.component(.day, from: $0.date), volume: $0.volume, series: "Current") }
+        
+        // Process last month data
+        let last = lastMonthData.map { (day: Calendar.current.component(.day, from: $0.date), volume: $0.volume, series: "Last Month") }
+        
         return current + last
     }
     
@@ -45,10 +38,22 @@ struct CumulativeVolumeChart: View {
         return data.first { Calendar.current.component(.day, from: $0.date) == day }?.volume
     }
     
+    private var xAxisStride: Int {
+        let maxDays = max(
+            currentMonthData.count > 0 ? Calendar.current.component(.day, from: currentMonthData.last!.date) : 0,
+            lastMonthData.count > 0 ? Calendar.current.component(.day, from: lastMonthData.last!.date) : 0
+        )
+        
+        if maxDays <= 7 { return 1 }
+        if maxDays <= 14 { return 2 }
+        if maxDays <= 21 { return 3 }
+        return 5
+    }
+    
     var body: some View {
-        Chart(chartData, id: \.date) { item in
+        Chart(chartData, id: \.day) { item in
             LineMark(
-                x: .value("Day", Calendar.current.component(.day, from: item.date)),
+                x: .value("Day", item.day),
                 y: .value("Volume", item.volume)
             )
             .foregroundStyle(by: .value("Month", item.series))
@@ -64,14 +69,49 @@ struct CumulativeVolumeChart: View {
             "Last Month": .gray
         ])
         .chartLegend(.hidden)
+        .chartXScale(domain: 1...31)
+        .chartXAxis {
+            AxisMarks(
+                position: .bottom,
+                values: Array(stride(from: 1, through: 31, by: xAxisStride))
+            ) { value in
+                if let day = value.as(Int.self) {
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
+                    AxisTick(stroke: StrokeStyle(lineWidth: 1))
+                    AxisValueLabel {
+                        Text("\(day)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .chartYAxis {
+            AxisMarks(
+                position: .leading,
+                values: .automatic(desiredCount: 4)
+            ) { value in
+                if let volume = value.as(Double.self) {
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
+                    AxisTick(stroke: StrokeStyle(lineWidth: 1))
+                    AxisValueLabel {
+                        Text(formatVolume(volume))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .chartYScale(domain: 0...maxVolume)
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 Rectangle().fill(.clear).contentShape(Rectangle())
                     .gesture(
                         DragGesture()
                             .onChanged { value in
-                                let x = value.location.x - geometry[proxy.plotAreaFrame].origin.x
-                                guard x >= 0, x <= geometry[proxy.plotAreaFrame].width else { return }
+                                guard let plotFrame = proxy.plotFrame else { return }
+                                let x = value.location.x - geometry[plotFrame].origin.x
+                                guard x >= 0, x <= geometry[plotFrame].width else { return }
                                 
                                 let day: Int = proxy.value(atX: x, as: Int.self) ?? 0
                                 selectedDay = day
@@ -84,63 +124,23 @@ struct CumulativeVolumeChart: View {
                             }
                             .onEnded { _ in
                                 selectedDay = nil
-                                // Reset to total volumes
                                 currentValue = currentMonthData.last?.volume ?? 0
                                 previousValue = lastMonthData.last?.volume ?? 0
                             }
                     )
                 
                 if let day = selectedDay,
-                   let xPosition = proxy.position(forX: day) {
+                   let xPosition = proxy.position(forX: day),
+                   let plotFrame = proxy.plotFrame {
                     Rectangle()
                         .fill(Color.blue.opacity(0.2))
                         .frame(width: 1)
                         .position(
-                            x: geometry[proxy.plotAreaFrame].origin.x + xPosition,
+                            x: geometry[plotFrame].origin.x + xPosition,
                             y: geometry.size.height / 2
                         )
                 }
             }
         }
-        .chartXAxis {
-            AxisMarks(
-                preset: .automatic,
-                position: .bottom,
-                values: .stride(by: 5)
-            ) { value in
-                if value.as(Int.self) == 0 {
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                } else {
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
-                }
-                AxisTick(stroke: StrokeStyle(lineWidth: 1))
-                AxisValueLabel {
-                    if let day = value.as(Int.self) {
-                        Text("\(day)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .offset(y: 4)
-            }
-        }
-        .chartYAxis {
-            AxisMarks(position: .leading, values: yAxisValues) { value in
-                if value.as(Double.self) == 0 {
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                } else {
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
-                }
-                AxisTick(stroke: StrokeStyle(lineWidth: 1))
-                AxisValueLabel {
-                    if let volume = value.as(Double.self) {
-                        Text(formatVolume(volume))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .chartYScale(domain: 0...maxVolume)
     }
 } 

@@ -177,7 +177,7 @@ struct ExerciseDetailView: View {
                         Text(category).tag(category)
                     }
                 }
-                .onChange(of: category) { newValue in
+                .onChange(of: category) { oldValue, newValue in
                     exercise.category = newValue
                     do {
                         try viewContext.save()

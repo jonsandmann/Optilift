@@ -107,7 +107,7 @@ class ConflictResolver {
         // Update relationships
         for relationship in local.entity.relationshipsByName {
             let key = relationship.key
-            if let remoteReference = remote.value(forKey: key) as? CKRecord.Reference {
+            if remote.value(forKey: key) != nil {
                 // For relationships, we'll need to fetch the related object
                 // This is handled by the update(from:) method
                 try local.update(from: remote)

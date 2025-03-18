@@ -8,9 +8,9 @@ class CloudKitManager: ObservableObject {
     private let database: CKDatabase
     
     private init() {
-        container = CKContainer(identifier: "iCloud.com.jonsandmann.Optilift")
+        container = CKContainer(identifier: "iCloud.optimizedliving.Optilift")
         database = container.privateCloudDatabase
-        print("CloudKitManager initialized with container: \(container.containerIdentifier ?? "unknown")")
+        print("[CloudKit] Manager initialized")
         
         // Set up notification observers
         NotificationCenter.default.addObserver(
@@ -34,7 +34,7 @@ class CloudKitManager: ObservableObject {
     
     @Published private(set) var syncStatus: SyncStatus = .notStarted {
         didSet {
-            print("Sync status changed to: \(syncStatus)")
+            print("[CloudKit] Sync status changed: \(syncStatus)")
         }
     }
     
@@ -45,23 +45,23 @@ class CloudKitManager: ObservableObject {
     // MARK: - CloudKit Operations
     
     func requestPermission() async throws {
-        print("Requesting CloudKit permissions...")
+        print("[CloudKit] Requesting permissions...")
         do {
             let status = try await container.accountStatus()
             guard status == .available else {
                 throw CloudKitError.accountNotAvailable
             }
-            print("CloudKit permissions granted")
+            print("[CloudKit] Permissions granted")
         } catch {
             throw CloudKitError.permissionError(error)
         }
     }
     
     func checkAccountStatus() async throws -> CKAccountStatus {
-        print("Checking CloudKit account status...")
+        print("[CloudKit] Checking account status...")
         do {
             let status = try await container.accountStatus()
-            print("CloudKit account status: \(status)")
+            print("[CloudKit] Account status: \(status)")
             return status
         } catch {
             throw CloudKitError.accountStatusError(error)
@@ -71,7 +71,7 @@ class CloudKitManager: ObservableObject {
     // MARK: - Sync Operations
     
     func sync() async {
-        print("Starting CloudKit sync...")
+        print("[CloudKit] Starting sync...")
         await MainActor.run {
             syncStatus = .inProgress(progress: 0.0)
         }
@@ -85,13 +85,13 @@ class CloudKitManager: ObservableObject {
             
             // The actual sync is handled by NSPersistentCloudKitContainer
             // We'll wait for the notification to update the status
-            print("CloudKit sync in progress...")
+            print("[CloudKit] Sync in progress...")
             
             // Start progress tracking
             startProgressTracking()
             
         } catch {
-            print("CloudKit sync failed: \(error)")
+            print("[CloudKit] Sync failed: \(error)")
             await handleSyncError(error)
         }
     }
@@ -153,26 +153,26 @@ class CloudKitManager: ObservableObject {
         Task { @MainActor in
             switch event.type {
             case .setup:
-                print("CloudKit setup in progress")
+                print("[CloudKit] Setup in progress")
                 syncStatus = .inProgress(progress: 0.2)
             case .import:
-                print("CloudKit import in progress")
+                print("[CloudKit] Import in progress")
                 syncStatus = .inProgress(progress: 0.4)
             case .export:
-                print("CloudKit export in progress")
+                print("[CloudKit] Export in progress")
                 syncStatus = .inProgress(progress: 0.6)
             @unknown default:
                 break
             }
             
             if event.succeeded {
-                print("CloudKit operation succeeded")
+                print("[CloudKit] Operation succeeded")
                 syncTimer?.invalidate()
                 syncTimer = nil
                 syncStatus = .completed
                 syncRetryCount = 0
             } else if let error = event.error {
-                print("CloudKit operation failed: \(error)")
+                print("[CloudKit] Operation failed: \(error)")
                 await handleSyncError(error)
             }
         }

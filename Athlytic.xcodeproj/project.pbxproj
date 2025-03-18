@@ -24,18 +24,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		4C5BB5A02D8660AC00BA7ABB /* Optilift.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Optilift.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		4C5BB5B02D8660AD00BA7ABB /* OptiliftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OptiliftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		4C5BB5BA2D8660AD00BA7ABB /* OptiliftUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OptiliftUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C5BB5A02D8660AC00BA7ABB /* Athlytic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Athlytic.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C5BB5B02D8660AD00BA7ABB /* AthlyticTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AthlyticTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C5BB5BA2D8660AD00BA7ABB /* AthlyticUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AthlyticUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DAAE71822D88B4D0001B36F5 /* Exceptions for "Optilift" folder in "Optilift" target */ = {
+		DAAE71822D88B4D0001B36F5 /* Exceptions for "Optilift" folder in "Athlytic" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 4C5BB59F2D8660AC00BA7ABB /* Optilift */;
+			target = 4C5BB59F2D8660AC00BA7ABB /* Athlytic */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -43,7 +43,7 @@
 		4C5BB5A22D8660AC00BA7ABB /* Optilift */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				DAAE71822D88B4D0001B36F5 /* Exceptions for "Optilift" folder in "Optilift" target */,
+				DAAE71822D88B4D0001B36F5 /* Exceptions for "Optilift" folder in "Athlytic" target */,
 			);
 			path = Optilift;
 			sourceTree = "<group>";
@@ -98,9 +98,9 @@
 		4C5BB5A12D8660AC00BA7ABB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4C5BB5A02D8660AC00BA7ABB /* Optilift.app */,
-				4C5BB5B02D8660AD00BA7ABB /* OptiliftTests.xctest */,
-				4C5BB5BA2D8660AD00BA7ABB /* OptiliftUITests.xctest */,
+				4C5BB5A02D8660AC00BA7ABB /* Athlytic.app */,
+				4C5BB5B02D8660AD00BA7ABB /* AthlyticTests.xctest */,
+				4C5BB5BA2D8660AD00BA7ABB /* AthlyticUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,9 +108,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4C5BB59F2D8660AC00BA7ABB /* Optilift */ = {
+		4C5BB59F2D8660AC00BA7ABB /* Athlytic */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4C5BB5C42D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "Optilift" */;
+			buildConfigurationList = 4C5BB5C42D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "Athlytic" */;
 			buildPhases = (
 				4C5BB59C2D8660AC00BA7ABB /* Sources */,
 				4C5BB59D2D8660AC00BA7ABB /* Frameworks */,
@@ -123,16 +123,16 @@
 			fileSystemSynchronizedGroups = (
 				4C5BB5A22D8660AC00BA7ABB /* Optilift */,
 			);
-			name = Optilift;
+			name = Athlytic;
 			packageProductDependencies = (
 			);
 			productName = Optilift;
-			productReference = 4C5BB5A02D8660AC00BA7ABB /* Optilift.app */;
+			productReference = 4C5BB5A02D8660AC00BA7ABB /* Athlytic.app */;
 			productType = "com.apple.product-type.application";
 		};
-		4C5BB5AF2D8660AD00BA7ABB /* OptiliftTests */ = {
+		4C5BB5AF2D8660AD00BA7ABB /* AthlyticTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4C5BB5C72D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "OptiliftTests" */;
+			buildConfigurationList = 4C5BB5C72D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "AthlyticTests" */;
 			buildPhases = (
 				4C5BB5AC2D8660AD00BA7ABB /* Sources */,
 				4C5BB5AD2D8660AD00BA7ABB /* Frameworks */,
@@ -146,16 +146,16 @@
 			fileSystemSynchronizedGroups = (
 				4C5BB5B32D8660AD00BA7ABB /* OptiliftTests */,
 			);
-			name = OptiliftTests;
+			name = AthlyticTests;
 			packageProductDependencies = (
 			);
 			productName = OptiliftTests;
-			productReference = 4C5BB5B02D8660AD00BA7ABB /* OptiliftTests.xctest */;
+			productReference = 4C5BB5B02D8660AD00BA7ABB /* AthlyticTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		4C5BB5B92D8660AD00BA7ABB /* OptiliftUITests */ = {
+		4C5BB5B92D8660AD00BA7ABB /* AthlyticUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4C5BB5CA2D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "OptiliftUITests" */;
+			buildConfigurationList = 4C5BB5CA2D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "AthlyticUITests" */;
 			buildPhases = (
 				4C5BB5B62D8660AD00BA7ABB /* Sources */,
 				4C5BB5B72D8660AD00BA7ABB /* Frameworks */,
@@ -169,11 +169,11 @@
 			fileSystemSynchronizedGroups = (
 				4C5BB5BD2D8660AD00BA7ABB /* OptiliftUITests */,
 			);
-			name = OptiliftUITests;
+			name = AthlyticUITests;
 			packageProductDependencies = (
 			);
 			productName = OptiliftUITests;
-			productReference = 4C5BB5BA2D8660AD00BA7ABB /* OptiliftUITests.xctest */;
+			productReference = 4C5BB5BA2D8660AD00BA7ABB /* AthlyticUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -199,7 +199,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 4C5BB59B2D8660AC00BA7ABB /* Build configuration list for PBXProject "Optilift" */;
+			buildConfigurationList = 4C5BB59B2D8660AC00BA7ABB /* Build configuration list for PBXProject "Athlytic" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -213,9 +213,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4C5BB59F2D8660AC00BA7ABB /* Optilift */,
-				4C5BB5AF2D8660AD00BA7ABB /* OptiliftTests */,
-				4C5BB5B92D8660AD00BA7ABB /* OptiliftUITests */,
+				4C5BB59F2D8660AC00BA7ABB /* Athlytic */,
+				4C5BB5AF2D8660AD00BA7ABB /* AthlyticTests */,
+				4C5BB5B92D8660AD00BA7ABB /* AthlyticUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -271,12 +271,12 @@
 /* Begin PBXTargetDependency section */
 		4C5BB5B22D8660AD00BA7ABB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4C5BB59F2D8660AC00BA7ABB /* Optilift */;
+			target = 4C5BB59F2D8660AC00BA7ABB /* Athlytic */;
 			targetProxy = 4C5BB5B12D8660AD00BA7ABB /* PBXContainerItemProxy */;
 		};
 		4C5BB5BC2D8660AD00BA7ABB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4C5BB59F2D8660AC00BA7ABB /* Optilift */;
+			target = 4C5BB59F2D8660AC00BA7ABB /* Athlytic */;
 			targetProxy = 4C5BB5BB2D8660AD00BA7ABB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -477,7 +477,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Optilift.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Optilift";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Athlytic.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Athlytic";
 			};
 			name = Debug;
 		};
@@ -495,7 +495,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Optilift.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Optilift";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Athlytic.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Athlytic";
 			};
 			name = Release;
 		};
@@ -534,7 +534,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4C5BB59B2D8660AC00BA7ABB /* Build configuration list for PBXProject "Optilift" */ = {
+		4C5BB59B2D8660AC00BA7ABB /* Build configuration list for PBXProject "Athlytic" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4C5BB5C22D8660AD00BA7ABB /* Debug */,
@@ -543,7 +543,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4C5BB5C42D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "Optilift" */ = {
+		4C5BB5C42D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "Athlytic" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4C5BB5C52D8660AD00BA7ABB /* Debug */,
@@ -552,7 +552,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4C5BB5C72D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "OptiliftTests" */ = {
+		4C5BB5C72D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "AthlyticTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4C5BB5C82D8660AD00BA7ABB /* Debug */,
@@ -561,7 +561,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4C5BB5CA2D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "OptiliftUITests" */ = {
+		4C5BB5CA2D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "AthlyticUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4C5BB5CB2D8660AD00BA7ABB /* Debug */,

@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreData
+import CloudKit
 
 struct SettingsView: View {
     @StateObject private var cloudKitManager = CloudKitManager.shared
@@ -7,6 +8,7 @@ struct SettingsView: View {
     @State private var showingClearConfirmation = false
     @State private var showingOnboarding = false
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var cloudKitStatus: CKAccountStatus = .couldNotDetermine
     
     var body: some View {
         List {
@@ -24,6 +26,13 @@ struct SettingsView: View {
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
+                }
+                
+                HStack {
+                    Image(systemName: cloudKitStatusIcon)
+                        .foregroundColor(cloudKitStatusColor)
+                    Text(cloudKitStatusText)
+                        .foregroundColor(.secondary)
                 }
                 
                 if case .failed = cloudKitManager.syncStatus {
@@ -88,6 +97,9 @@ struct SettingsView: View {
                 showingOnboarding = false
             }
         }
+        .onAppear {
+            checkCloudKitStatus()
+        }
     }
     
     private var syncStatusIcon: String {
@@ -119,6 +131,39 @@ struct SettingsView: View {
         case .failed(let error): return "Sync Failed: \(error.localizedDescription)"
         case .retrying(let attempt, _): return "Retrying (\(attempt))..."
         case .paused: return "Sync Paused"
+        }
+    }
+    
+    private var cloudKitStatusIcon: String {
+        switch cloudKitStatus {
+        case .available: return "checkmark.icloud"
+        case .noAccount: return "xmark.icloud"
+        case .restricted: return "exclamationmark.icloud"
+        case .couldNotDetermine: return "questionmark.icloud"
+        case .temporarilyUnavailable: return "exclamationmark.icloud"
+        @unknown default: return "questionmark.icloud"
+        }
+    }
+    
+    private var cloudKitStatusColor: Color {
+        switch cloudKitStatus {
+        case .available: return .green
+        case .noAccount: return .red
+        case .restricted: return .orange
+        case .couldNotDetermine: return .gray
+        case .temporarilyUnavailable: return .orange
+        @unknown default: return .gray
+        }
+    }
+    
+    private var cloudKitStatusText: String {
+        switch cloudKitStatus {
+        case .available: return "iCloud Account Available"
+        case .noAccount: return "No iCloud Account"
+        case .restricted: return "iCloud Restricted"
+        case .couldNotDetermine: return "Checking iCloud Status..."
+        case .temporarilyUnavailable: return "iCloud Temporarily Unavailable"
+        @unknown default: return "Unknown iCloud Status"
         }
     }
     
@@ -157,6 +202,16 @@ struct SettingsView: View {
             try viewContext.save()
         } catch {
             print("Error deleting workouts: \(error)")
+        }
+    }
+    
+    private func checkCloudKitStatus() {
+        Task {
+            do {
+                cloudKitStatus = try await PersistenceController.shared.checkCloudKitStatus()
+            } catch {
+                print("Error checking CloudKit status: \(error)")
+            }
         }
     }
 }
