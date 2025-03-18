@@ -7,6 +7,8 @@ struct WorkoutView: View {
     @State private var showingAddSet = false
     @State private var selectedDate = Date()
     @State private var setToEdit: CDWorkoutSet?
+    @State private var showingReassignSheet = false
+    @State private var selectedSet: CDWorkoutSet?
     
     init() {
         let calendar = Calendar.current
@@ -38,7 +40,10 @@ struct WorkoutView: View {
                 VolumeCardView(volume: todaysVolume, sets: Array(todaysSets))
             }
             AddSetButtonView(showingAddSet: $showingAddSet)
-            SetsListView(setsByExercise: setsByExercise, setToEdit: $setToEdit, deleteSet: deleteSet)
+            SetsListView(setsByExercise: setsByExercise, setToEdit: $setToEdit, deleteSet: deleteSet, onReassignSet: { set in
+                selectedSet = set
+                showingReassignSheet = true
+            })
         }
         .listStyle(.insetGrouped)
         .navigationTitle("Workout")
@@ -47,6 +52,11 @@ struct WorkoutView: View {
         }
         .sheet(item: $setToEdit) { set in
             EditSetView(set: set)
+        }
+        .sheet(isPresented: $showingReassignSheet) {
+            if let set = selectedSet {
+                ReassignSetView(set: set)
+            }
         }
     }
     
@@ -125,45 +135,14 @@ struct SetsListView: View {
     let setsByExercise: [(String, [CDWorkoutSet])]
     @Binding var setToEdit: CDWorkoutSet?
     let deleteSet: (CDWorkoutSet) -> Void
+    let onReassignSet: (CDWorkoutSet) -> Void
     
     var body: some View {
         ForEach(setsByExercise, id: \.0) { exerciseName, sets in
             Section(exerciseName) {
                 ForEach(sets) { set in
-                    SetRowView(set: set, setToEdit: $setToEdit, deleteSet: deleteSet)
+                    SetRowView(set: set, setToEdit: $setToEdit, deleteSet: deleteSet, onReassignSet: onReassignSet)
                 }
-            }
-        }
-    }
-}
-
-struct SetRowView: View {
-    let set: CDWorkoutSet
-    @Binding var setToEdit: CDWorkoutSet?
-    let deleteSet: (CDWorkoutSet) -> Void
-    
-    private var setVolume: Double {
-        Double(set.reps) * set.weight
-    }
-    
-    var body: some View {
-        HStack {
-            Text("\(Int(set.reps)) × \(String(format: "%.1f", set.weight)) lbs")
-            Spacer()
-            Text("\(NumberFormatter.volumeFormatter.string(from: NSNumber(value: setVolume)) ?? "0") lbs")
-                .foregroundColor(.secondary)
-            Text(set.date?.formatted(date: .omitted, time: .shortened) ?? "")
-                .foregroundColor(.secondary)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            setToEdit = set
-        }
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(role: .destructive) {
-                deleteSet(set)
-            } label: {
-                Label("Delete", systemImage: "trash")
             }
         }
     }
@@ -179,6 +158,7 @@ struct AddSetView: View {
     @State private var showingAlert = false
     @State private var alertMessage = ""
     @State private var showingPlateCalculator = false
+    @State private var selectedDate = Date()
     
     private let commonRepRanges = [5, 8, 10, 12, 15]
     
@@ -186,6 +166,7 @@ struct AddSetView: View {
         NavigationView {
             Form {
                 ExerciseSelectionSection(selectedExercise: $selectedExercise, showingExercisePicker: $showingExercisePicker)
+                DateSection(selectedDate: $selectedDate)
                 RepsSection(reps: $reps, commonRepRanges: commonRepRanges)
                 WeightSection(weight: $weight, showingPlateCalculator: $showingPlateCalculator)
             }
@@ -232,12 +213,37 @@ struct AddSetView: View {
             return
         }
         
+        // Get or create workout for selected date
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: selectedDate)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        
+        let workoutFetchRequest: NSFetchRequest<CDWorkout> = CDWorkout.fetchRequest()
+        workoutFetchRequest.predicate = NSPredicate(format: "date >= %@ AND date < %@", startOfDay as NSDate, endOfDay as NSDate)
+        
+        let workout: CDWorkout
+        do {
+            let existingWorkouts = try viewContext.fetch(workoutFetchRequest)
+            if let existingWorkout = existingWorkouts.first {
+                workout = existingWorkout
+            } else {
+                workout = CDWorkout(context: viewContext)
+                workout.ensureUUID()
+                workout.date = selectedDate
+            }
+        } catch {
+            alertMessage = "Error fetching workout: \(error.localizedDescription)"
+            showingAlert = true
+            return
+        }
+        
         let newSet = CDWorkoutSet(context: viewContext)
         newSet.ensureUUID()
         newSet.exercise = exercise
         newSet.weight = weightValue
         newSet.reps = repsValue
-        newSet.date = Date()
+        newSet.date = selectedDate
+        newSet.workout = workout
         
         do {
             try viewContext.save()
@@ -266,6 +272,16 @@ struct ExerciseSelectionSection: View {
                         .foregroundColor(.secondary)
                 }
             }
+        }
+    }
+}
+
+struct DateSection: View {
+    @Binding var selectedDate: Date
+    
+    var body: some View {
+        Section("Date") {
+            DatePicker("Date", selection: $selectedDate, displayedComponents: [.date])
         }
     }
 }

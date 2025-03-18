@@ -132,6 +132,8 @@ struct WorkoutDetailView: View {
     let workout: CDWorkout
     @State private var setToEdit: CDWorkoutSet?
     @Environment(\.managedObjectContext) private var viewContext
+    @State private var showingReassignSheet = false
+    @State private var selectedSet: CDWorkoutSet?
     
     private func formatVolume(_ volume: Double) -> String {
         return NumberFormatter.volumeFormatter.string(from: NSNumber(value: volume)) ?? "0"
@@ -151,9 +153,15 @@ struct WorkoutDetailView: View {
     
     private var setsByExercise: [(String, [CDWorkoutSet])] {
         guard let sets = workout.sets as? Set<CDWorkoutSet> else { return [] }
-        return Dictionary(grouping: Array(sets)) { $0.exercise?.name ?? "Unknown" }
-            .map { ($0.key, $0.value) }
-            .sorted { $0.0 < $1.0 }
+        return Dictionary(grouping: Array(sets)) { set in
+            if let exercise = set.exercise {
+                return exercise.name ?? "Unknown"
+            } else {
+                return "Deleted Exercise"
+            }
+        }
+        .map { ($0.key, $0.value) }
+        .sorted { $0.0 < $1.0 }
     }
     
     var body: some View {
@@ -170,11 +178,25 @@ struct WorkoutDetailView: View {
                 .padding(.vertical, 4)
             }
             
-            SetsListView(setsByExercise: setsByExercise, setToEdit: $setToEdit, deleteSet: deleteSet)
+            ForEach(setsByExercise, id: \.0) { exerciseName, sets in
+                Section(exerciseName) {
+                    ForEach(sets) { set in
+                        SetRowView(set: set, setToEdit: $setToEdit, deleteSet: deleteSet, onReassignSet: { set in
+                            selectedSet = set
+                            showingReassignSheet = true
+                        })
+                    }
+                }
+            }
         }
         .navigationTitle("Workout Details")
         .sheet(item: $setToEdit) { set in
             EditSetView(set: set)
+        }
+        .sheet(isPresented: $showingReassignSheet) {
+            if let set = selectedSet {
+                ReassignSetView(set: set)
+            }
         }
     }
     
@@ -184,6 +206,93 @@ struct WorkoutDetailView: View {
             try viewContext.save()
         } catch {
             print("Error deleting set: \(error)")
+        }
+    }
+}
+
+struct ReassignSetView: View {
+    let set: CDWorkoutSet
+    @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.dismiss) private var dismiss
+    @FetchRequest private var exercises: FetchedResults<CDExercise>
+    @State private var selectedExercise: CDExercise?
+    @State private var showingAlert = false
+    @State private var alertMessage = ""
+    
+    init(set: CDWorkoutSet) {
+        self.set = set
+        _exercises = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \CDExercise.name, ascending: true)]
+        )
+    }
+    
+    var body: some View {
+        NavigationView {
+            List {
+                Section {
+                    Text("Select a new exercise for this set:")
+                }
+                
+                Section {
+                    ForEach(exercises) { exercise in
+                        Button {
+                            selectedExercise = exercise
+                        } label: {
+                            HStack {
+                                Text(exercise.name ?? "")
+                                Spacer()
+                                if selectedExercise?.id == exercise.id {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.accentColor)
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                Section("Set Details") {
+                    VStack(alignment: .leading) {
+                        Text("\(Int(set.reps)) × \(String(format: "%.1f", set.weight)) lbs")
+                        Text(set.date?.formatted(date: .abbreviated, time: .omitted) ?? "")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .navigationTitle("Reassign Set")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Reassign") {
+                        reassignSet()
+                    }
+                    .disabled(selectedExercise == nil)
+                }
+            }
+            .alert("Error", isPresented: $showingAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(alertMessage)
+            }
+        }
+    }
+    
+    private func reassignSet() {
+        guard let newExercise = selectedExercise else { return }
+        
+        set.exercise = newExercise
+        
+        do {
+            try viewContext.save()
+            dismiss()
+        } catch {
+            alertMessage = "Error reassigning set: \(error.localizedDescription)"
+            showingAlert = true
         }
     }
 }

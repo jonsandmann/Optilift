@@ -146,14 +146,66 @@ struct ExerciseDetailView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     @State private var showingDeleteConfirmation = false
+    @State private var showingReassignSheet = false
+    @State private var category: String
+    
+    private let categories = [
+        "Chest",
+        "Back",
+        "Legs",
+        "Shoulders",
+        "Arms",
+        "Core",
+        "Cardio",
+        "Other"
+    ]
+    
+    private var associatedSetsCount: Int {
+        (exercise.sets as? Set<CDWorkoutSet>)?.count ?? 0
+    }
+    
+    init(exercise: CDExercise) {
+        self.exercise = exercise
+        _category = State(initialValue: exercise.category ?? "Other")
+    }
     
     var body: some View {
         List {
             Section {
-                LabeledContent("Category", value: exercise.category ?? "Unknown")
+                Picker("Category", selection: $category) {
+                    ForEach(categories, id: \.self) { category in
+                        Text(category).tag(category)
+                    }
+                }
+                .onChange(of: category) { newValue in
+                    exercise.category = newValue
+                    do {
+                        try viewContext.save()
+                    } catch {
+                        print("Error saving category: \(error)")
+                    }
+                }
+                
                 if let notes = exercise.notes {
                     Text(notes)
                         .foregroundColor(.secondary)
+                }
+            }
+            
+            if associatedSetsCount > 0 {
+                Section {
+                    HStack {
+                        Text("Associated Sets")
+                        Spacer()
+                        Text("\(associatedSetsCount)")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Button {
+                        showingReassignSheet = true
+                    } label: {
+                        Label("Reassign Sets", systemImage: "arrow.triangle.2.circlepath")
+                    }
                 }
             }
         }
@@ -179,7 +231,112 @@ struct ExerciseDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Are you sure you want to delete this exercise? This action cannot be undone.")
+            if associatedSetsCount > 0 {
+                Text("This exercise has \(associatedSetsCount) associated sets. Deleting this exercise will remove the exercise association from these sets, but the sets will be preserved. You can reassign these sets to a different exercise before deleting.")
+            } else {
+                Text("Are you sure you want to delete this exercise? This action cannot be undone.")
+            }
+        }
+        .sheet(isPresented: $showingReassignSheet) {
+            ReassignSetsView(exercise: exercise)
+        }
+    }
+}
+
+struct ReassignSetsView: View {
+    let exercise: CDExercise
+    @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.dismiss) private var dismiss
+    @FetchRequest private var exercises: FetchedResults<CDExercise>
+    @State private var selectedExercise: CDExercise?
+    @State private var showingAlert = false
+    @State private var alertMessage = ""
+    
+    init(exercise: CDExercise) {
+        self.exercise = exercise
+        _exercises = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \CDExercise.name, ascending: true)],
+            predicate: NSPredicate(format: "self != %@", exercise)
+        )
+    }
+    
+    private var associatedSets: [CDWorkoutSet] {
+        (exercise.sets as? Set<CDWorkoutSet>)?.sorted { ($0.date ?? Date()) > ($1.date ?? Date()) } ?? []
+    }
+    
+    var body: some View {
+        NavigationView {
+            List {
+                Section {
+                    Text("Select a new exercise to reassign \(associatedSets.count) sets to:")
+                }
+                
+                Section {
+                    ForEach(exercises) { exercise in
+                        Button {
+                            selectedExercise = exercise
+                        } label: {
+                            HStack {
+                                Text(exercise.name ?? "")
+                                Spacer()
+                                if selectedExercise?.id == exercise.id {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.accentColor)
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if !associatedSets.isEmpty {
+                    Section("Affected Sets") {
+                        ForEach(associatedSets) { set in
+                            VStack(alignment: .leading) {
+                                Text("\(Int(set.reps)) × \(String(format: "%.1f", set.weight)) lbs")
+                                Text(set.date?.formatted(date: .abbreviated, time: .omitted) ?? "")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Reassign Sets")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Reassign") {
+                        reassignSets()
+                    }
+                    .disabled(selectedExercise == nil)
+                }
+            }
+            .alert("Error", isPresented: $showingAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(alertMessage)
+            }
+        }
+    }
+    
+    private func reassignSets() {
+        guard let newExercise = selectedExercise else { return }
+        
+        for set in associatedSets {
+            set.exercise = newExercise
+        }
+        
+        do {
+            try viewContext.save()
+            dismiss()
+        } catch {
+            alertMessage = "Error reassigning sets: \(error.localizedDescription)"
+            showingAlert = true
         }
     }
 } 
