@@ -396,6 +396,7 @@ struct ExercisePickerView: View {
     @Binding var selectedExercise: CDExercise?
     @State private var searchText = ""
     @State private var selectedCategory: String?
+    @State private var showingAddExercise = false
     
     private let categories = [
         "Chest",
@@ -442,6 +443,15 @@ struct ExercisePickerView: View {
     var body: some View {
         NavigationView {
             List {
+                Section {
+                    Button {
+                        showingAddExercise = true
+                    } label: {
+                        Label("Add New Exercise", systemImage: "plus.circle.fill")
+                            .foregroundColor(.blue)
+                    }
+                }
+                
                 if !searchText.isEmpty {
                     Section {
                         ForEach(filteredExercises) { exercise in
@@ -494,6 +504,11 @@ struct ExercisePickerView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showingAddExercise) {
+                NavigationStack {
+                    AddExerciseView()
+                }
+            }
         }
     }
     
@@ -503,18 +518,11 @@ struct ExercisePickerView: View {
             dismiss()
         } label: {
             HStack {
-                VStack(alignment: .leading) {
-                    Text(exercise.name ?? "Unknown Exercise")
-                    if let category = exercise.category {
-                        Text(category)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
+                Text(exercise.name ?? "")
                 Spacer()
                 if selectedExercise?.id == exercise.id {
                     Image(systemName: "checkmark")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                 }
             }
         }
