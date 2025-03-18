@@ -13,6 +13,8 @@ struct DashboardView: View {
     
     @State private var selectedTimeRange: TimeRange = .threeMonths
     @State private var showingAddWorkout = false
+    @State private var selectedCurrentVolume: Double = 0
+    @State private var selectedPreviousVolume: Double = 0
     
     enum TimeRange: Int, CaseIterable {
         case threeMonths = 3
@@ -139,6 +141,50 @@ struct DashboardView: View {
             .reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
     }
     
+    private func getCumulativeVolumes() -> (current: [(date: Date, volume: Double)], last: [(date: Date, volume: Double)]) {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
+        let startOfLastMonth = calendar.date(byAdding: .month, value: -1, to: startOfMonth)!
+        let endOfLastMonth = calendar.date(byAdding: .day, value: -1, to: startOfMonth)!
+        
+        // Get all sets for current month
+        let currentMonthSets = thisYearSets.filter { guard let date = $0.date else { return false }; return date >= startOfMonth }
+        let lastMonthSets = thisYearSets.filter { guard let date = $0.date else { return false }; return date >= startOfLastMonth && date <= endOfLastMonth }
+        
+        // Process current month data
+        var currentMonthData: [(date: Date, volume: Double)] = []
+        var runningVolume: Double = 0
+        let currentMonthDays = calendar.range(of: .day, in: .month, for: now)?.count ?? 0
+        
+        for day in 1...currentMonthDays {
+            if let date = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) {
+                let dayVolume = currentMonthSets
+                    .filter { guard let setDate = $0.date else { return false }; return calendar.isDate(setDate, inSameDayAs: date) }
+                    .reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
+                runningVolume += dayVolume
+                currentMonthData.append((date: date, volume: runningVolume))
+            }
+        }
+        
+        // Process last month data
+        var lastMonthData: [(date: Date, volume: Double)] = []
+        runningVolume = 0
+        let lastMonthDays = calendar.range(of: .day, in: .month, for: startOfLastMonth)?.count ?? 0
+        
+        for day in 1...lastMonthDays {
+            if let date = calendar.date(byAdding: .day, value: day - 1, to: startOfLastMonth) {
+                let dayVolume = lastMonthSets
+                    .filter { guard let setDate = $0.date else { return false }; return calendar.isDate(setDate, inSameDayAs: date) }
+                    .reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
+                runningVolume += dayVolume
+                lastMonthData.append((date: date, volume: runningVolume))
+            }
+        }
+        
+        return (current: currentMonthData, last: lastMonthData)
+    }
+    
     var body: some View {
         List {
             Section {
@@ -171,11 +217,25 @@ struct DashboardView: View {
             }
             
             Section("Monthly Comparison") {
-                VolumeComparisonView(
-                    title: "Month to Date",
-                    currentValue: thisMonthVolume,
-                    previousValue: lastMonthVolume
-                )
+                VStack(alignment: .leading, spacing: 12) {
+                    let volumes = getCumulativeVolumes()
+                    VolumeComparisonView(
+                        title: "Month to Date",
+                        currentValue: selectedCurrentVolume,
+                        previousValue: selectedPreviousVolume
+                    )
+                    
+                    CumulativeVolumeChart(
+                        currentMonthData: volumes.current,
+                        lastMonthData: volumes.last,
+                        currentValue: $selectedCurrentVolume,
+                        previousValue: $selectedPreviousVolume
+                    )
+                    .onAppear {
+                        selectedCurrentVolume = volumes.current.last?.volume ?? 0
+                        selectedPreviousVolume = volumes.last.last?.volume ?? 0
+                    }
+                }
             }
             
             Section("Yearly Comparison") {
@@ -224,17 +284,6 @@ struct DashboardView: View {
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding()
-                    }
-                }
-            }
-            
-            Section {
-                NavigationLink {
-                    WorkoutsView()
-                } label: {
-                    HStack {
-                        Image(systemName: "list.bullet")
-                        Text("View All Workouts")
                     }
                 }
             }
@@ -306,7 +355,21 @@ struct VolumeTrendChart: View {
     private var yAxisValues: [Double] {
         let step = maxVolume / 4 // Create 4 major grid lines
         let roundedStep = round(step / 1000) * 1000 // Round to nearest 1000 for clean numbers
-        return stride(from: 0, through: maxVolume, by: roundedStep).map { $0 }
+        let values = stride(from: 0, through: maxVolume, by: roundedStep).map { $0 }
+        // Ensure we include the max value if it's not already included
+        if let lastValue = values.last, lastValue < maxVolume {
+            return values + [maxVolume]
+        }
+        return values
+    }
+    
+    private func formatVolume(_ volume: Double) -> String {
+        if volume >= 1_000_000 {
+            return String(format: "%.0fM", volume / 1_000_000)
+        } else if volume >= 1_000 {
+            return String(format: "%.0fK", volume / 1_000)
+        }
+        return NumberFormatter.volumeFormatter.string(from: NSNumber(value: volume)) ?? "0"
     }
     
     private var xAxisStride: Int {
@@ -345,12 +408,17 @@ struct VolumeTrendChart: View {
                     position: .bottom,
                     values: shouldCenterLabels ? .automatic : .stride(by: .month, count: xAxisStride)
                 ) { value in
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                    AxisTick()
+                    if value.as(Date.self) == volumes.first?.date {
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                    } else {
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
+                    }
+                    AxisTick(stroke: StrokeStyle(lineWidth: 1))
                     AxisValueLabel {
                         if let date = value.as(Date.self) {
                             Text(dateFormatter.string(from: date))
                                 .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
                     .offset(y: 4)
@@ -358,12 +426,17 @@ struct VolumeTrendChart: View {
             }
             .chartYAxis {
                 AxisMarks(position: .leading, values: yAxisValues) { value in
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                    AxisTick()
+                    if value.as(Double.self) == 0 {
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                    } else {
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
+                    }
+                    AxisTick(stroke: StrokeStyle(lineWidth: 1))
                     AxisValueLabel {
                         if let volume = value.as(Double.self) {
-                            Text(NumberFormatter.volumeFormatter.string(from: NSNumber(value: volume)) ?? "")
+                            Text(formatVolume(volume))
                                 .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }

@@ -130,6 +130,8 @@ struct WorkoutsView: View {
 
 struct WorkoutDetailView: View {
     let workout: CDWorkout
+    @State private var setToEdit: CDWorkoutSet?
+    @Environment(\.managedObjectContext) private var viewContext
     
     private func formatVolume(_ volume: Double) -> String {
         return NumberFormatter.volumeFormatter.string(from: NSNumber(value: volume)) ?? "0"
@@ -147,6 +149,13 @@ struct WorkoutDetailView: View {
         return sets.reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
     }
     
+    private var setsByExercise: [(String, [CDWorkoutSet])] {
+        guard let sets = workout.sets as? Set<CDWorkoutSet> else { return [] }
+        return Dictionary(grouping: Array(sets)) { $0.exercise?.name ?? "Unknown" }
+            .map { ($0.key, $0.value) }
+            .sorted { $0.0 < $1.0 }
+    }
+    
     var body: some View {
         List {
             Section {
@@ -161,25 +170,21 @@ struct WorkoutDetailView: View {
                 .padding(.vertical, 4)
             }
             
-            if let sets = workout.sets as? Set<CDWorkoutSet> {
-                Section("Sets") {
-                    ForEach(Array(sets).sorted { ($0.exercise?.name ?? "") < ($1.exercise?.name ?? "") }) { set in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(set.exercise?.name ?? "Unknown")
-                                    .font(.headline)
-                                Text("\(set.reps) reps × \(formatVolume(set.weight)) lbs")
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            Text("Vol: \(formatVolume(Double(set.reps) * set.weight)) lbs")
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-            }
+            SetsListView(setsByExercise: setsByExercise, setToEdit: $setToEdit, deleteSet: deleteSet)
         }
         .navigationTitle("Workout Details")
+        .sheet(item: $setToEdit) { set in
+            EditSetView(set: set)
+        }
+    }
+    
+    private func deleteSet(_ set: CDWorkoutSet) {
+        viewContext.delete(set)
+        do {
+            try viewContext.save()
+        } catch {
+            print("Error deleting set: \(error)")
+        }
     }
 }
 

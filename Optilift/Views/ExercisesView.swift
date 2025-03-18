@@ -123,7 +123,7 @@ struct AddExerciseView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Add") {
                     let exercise = CDExercise(context: viewContext)
-                    exercise.id = UUID()
+                    exercise.ensureUUID()
                     exercise.name = name
                     exercise.category = category
                     exercise.notes = notes.isEmpty ? nil : notes

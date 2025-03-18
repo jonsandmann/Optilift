@@ -199,7 +199,7 @@ struct ImportDataView: View {
                     }
                     
                     let workout = CDWorkout(context: viewContext)
-                    workout.id = UUID()
+                    workout.ensureUUID()
                     workout.date = date
                     
                     for set in sets {
@@ -212,7 +212,7 @@ struct ImportDataView: View {
                         }
                         
                         let workoutSet = CDWorkoutSet(context: viewContext)
-                        workoutSet.id = UUID()
+                        workoutSet.ensureUUID()
                         workoutSet.reps = Int32(set.reps)
                         workoutSet.weight = set.weight
                         workoutSet.date = date
@@ -273,7 +273,7 @@ struct ImportDataView: View {
         }
         
         let exercise = CDExercise(context: viewContext)
-        exercise.id = UUID()
+        exercise.ensureUUID()
         exercise.name = name
         exercise.category = "Imported" // Default category for imported exercises
         

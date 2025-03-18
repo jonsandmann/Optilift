@@ -34,7 +34,9 @@ struct WorkoutView: View {
     
     var body: some View {
         List {
-            VolumeCardView(volume: todaysVolume)
+            Section {
+                VolumeCardView(volume: todaysVolume, sets: Array(todaysSets))
+            }
             AddSetButtonView(showingAddSet: $showingAddSet)
             SetsListView(setsByExercise: setsByExercise, setToEdit: $setToEdit, deleteSet: deleteSet)
         }
@@ -60,24 +62,40 @@ struct WorkoutView: View {
 
 struct VolumeCardView: View {
     let volume: Double
+    let sets: [CDWorkoutSet]
     
     var body: some View {
-        Section {
-            VStack(spacing: 8) {
-                Text("Today's Volume")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                Text("\(NumberFormatter.volumeFormatter.string(from: NSNumber(value: volume)) ?? "0") lbs")
-                    .font(.system(size: 36, weight: .bold))
+        Group {
+            if sets.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "figure.strengthtraining.traditional")
+                        .font(.system(size: 40))
+                        .foregroundColor(.blue)
+                    Text("No sets logged today")
+                        .font(.headline)
+                    Text("Add your first set to start tracking")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+            } else {
+                VStack(spacing: 8) {
+                    Text("Today's Volume")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Text("\(NumberFormatter.volumeFormatter.string(from: NSNumber(value: volume)) ?? "0") lbs")
+                        .font(.system(size: 36, weight: .bold))
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.systemBackground))
+                .cornerRadius(12)
+                .shadow(radius: 2)
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color(.systemBackground))
-            .cornerRadius(12)
-            .shadow(radius: 2)
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
         }
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
     }
 }
 
@@ -215,7 +233,7 @@ struct AddSetView: View {
         }
         
         let newSet = CDWorkoutSet(context: viewContext)
-        newSet.id = UUID()
+        newSet.ensureUUID()
         newSet.exercise = exercise
         newSet.weight = weightValue
         newSet.reps = repsValue
