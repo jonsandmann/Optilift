@@ -51,7 +51,6 @@ We do not:
 You have full control over your data:
 - You can delete all your data at any time using the "Clear All Data" option in Settings
 - You can disable iCloud sync in your device settings
-- You can export your data using the built-in export feature
 - You can import your data from CSV files
 
 ## Data Deletion
