@@ -8,7 +8,7 @@ class CloudKitManager: ObservableObject {
     private let database: CKDatabase
     
     private init() {
-        container = CKContainer(identifier: "iCloud.optimizedliving.Athlytic")
+        container = CKContainer(identifier: "iCloud.optimizedliving.Liftiq")
         database = container.privateCloudDatabase
         print("[CloudKit] Manager initialized")
         

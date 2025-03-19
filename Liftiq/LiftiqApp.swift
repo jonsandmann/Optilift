@@ -1,14 +1,14 @@
 //
-//  OptiliftApp.swift
-//  Optilift
+//  LiftiqApp.swift
+//  Liftiq
 //
-//  Created by Jon Sandmann on 3/15/25.
+//  Created by Jon Sandmann on 3/19/24.
 //
 
 import SwiftUI
 
 @main
-struct OptiliftApp: App {
+struct LiftiqApp: App {
     let persistenceController = PersistenceController.shared
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     

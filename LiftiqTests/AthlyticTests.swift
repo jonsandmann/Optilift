@@ -1,14 +1,14 @@
 //
-//  OptiliftTests.swift
-//  OptiliftTests
+//  LiftiqTests.swift
+//  LiftiqTests
 //
-//  Created by Jon Sandmann on 3/15/25.
+//  Created by Jon Sandmann on 3/19/24.
 //
 
-import Testing
-@testable import Optilift
+import XCTest
+@testable import Liftiq
 
-struct OptiliftTests {
+struct LiftiqTests {
 
     @Test func example() async throws {
         // Write your test here and use APIs like `#expect(...)` to check expected conditions.

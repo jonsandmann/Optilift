@@ -1,13 +1,13 @@
 //
-//  OptiliftUITestsLaunchTests.swift
-//  OptiliftUITests
+//  LiftiqUITestsLaunchTests.swift
+//  LiftiqUITests
 //
-//  Created by Jon Sandmann on 3/15/25.
+//  Created by Jon Sandmann on 3/19/24.
 //
 
 import XCTest
 
-final class OptiliftUITestsLaunchTests: XCTestCase {
+final class LiftiqUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

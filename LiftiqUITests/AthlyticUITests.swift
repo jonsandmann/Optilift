@@ -1,13 +1,13 @@
 //
-//  OptiliftUITests.swift
-//  OptiliftUITests
+//  LiftiqUITests.swift
+//  LiftiqUITests
 //
-//  Created by Jon Sandmann on 3/15/25.
+//  Created by Jon Sandmann on 3/19/24.
 //
 
 import XCTest
 
-final class OptiliftUITests: XCTestCase {
+final class LiftiqUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -15,7 +15,7 @@ final class OptiliftUITests: XCTestCase {
         // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
 
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+        // In UI tests it's important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
     }
 
     override func tearDownWithError() throws {

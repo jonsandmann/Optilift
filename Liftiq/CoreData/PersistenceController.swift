@@ -10,7 +10,7 @@ class PersistenceController {
     init(inMemory: Bool = false, useCloudKit: Bool = true) {
         self.useCloudKit = useCloudKit
         print("[CloudKit] Initializing with CloudKit enabled: \(useCloudKit)")
-        container = NSPersistentCloudKitContainer(name: "AthlyticModel")
+        container = NSPersistentCloudKitContainer(name: "LiftiqModel")
         
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
@@ -23,7 +23,7 @@ class PersistenceController {
             }
             
             // Set up CloudKit container
-            let cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.optimizedliving.Athlytic")
+            let cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.optimizedliving.Liftiq")
             cloudKitContainerOptions.databaseScope = .private
             description.cloudKitContainerOptions = cloudKitContainerOptions
             
@@ -70,7 +70,7 @@ class PersistenceController {
     }
     
     func checkCloudKitStatus() async throws -> CKAccountStatus {
-        let container = CKContainer(identifier: "iCloud.optimizedliving.Athlytic")
+        let container = CKContainer(identifier: "iCloud.optimizedliving.Liftiq")
         let status = try await container.accountStatus()
         print("[CloudKit] Account status: \(status)")
         return status
