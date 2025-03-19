@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4C5BB59F2D8660AC00BA7ABB"
-               BuildableName = "Athlytic.app"
-               BlueprintName = "Athlytic"
-               ReferencedContainer = "container:Athlytic.xcodeproj">
+               BuildableName = "Liftiq.app"
+               BlueprintName = "Liftiq"
+               ReferencedContainer = "container:Liftiq.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -36,9 +36,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4C5BB5AF2D8660AD00BA7ABB"
-               BuildableName = "AthlyticTests.xctest"
-               BlueprintName = "AthlyticTests"
-               ReferencedContainer = "container:Athlytic.xcodeproj">
+               BuildableName = "LiftiqTests.xctest"
+               BlueprintName = "LiftiqTests"
+               ReferencedContainer = "container:Liftiq.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -47,9 +47,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4C5BB5B92D8660AD00BA7ABB"
-               BuildableName = "AthlyticUITests.xctest"
-               BlueprintName = "AthlyticUITests"
-               ReferencedContainer = "container:Athlytic.xcodeproj">
+               BuildableName = "LiftiqUITests.xctest"
+               BlueprintName = "LiftiqUITests"
+               ReferencedContainer = "container:Liftiq.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -69,9 +69,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4C5BB59F2D8660AC00BA7ABB"
-            BuildableName = "Athlytic.app"
-            BlueprintName = "Athlytic"
-            ReferencedContainer = "container:Athlytic.xcodeproj">
+            BuildableName = "Liftiq.app"
+            BlueprintName = "Liftiq"
+            ReferencedContainer = "container:Liftiq.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -86,9 +86,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4C5BB59F2D8660AC00BA7ABB"
-            BuildableName = "Athlytic.app"
-            BlueprintName = "Athlytic"
-            ReferencedContainer = "container:Athlytic.xcodeproj">
+            BuildableName = "Liftiq.app"
+            BlueprintName = "Liftiq"
+            ReferencedContainer = "container:Liftiq.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

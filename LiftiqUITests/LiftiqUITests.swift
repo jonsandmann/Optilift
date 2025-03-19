@@ -40,4 +40,4 @@ final class LiftiqUITests: XCTestCase {
             }
         }
     }
-}
+} 

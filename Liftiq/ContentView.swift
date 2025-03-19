@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  Optilift
+//  Liftiq
 //
 //  Created by Jon Sandmann on 3/15/25.
 //

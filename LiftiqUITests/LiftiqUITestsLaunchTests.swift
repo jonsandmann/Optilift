@@ -30,4 +30,4 @@ final class LiftiqUITestsLaunchTests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
     }
-}
+} 
