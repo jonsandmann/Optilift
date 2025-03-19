@@ -12,50 +12,50 @@
 			containerPortal = 4C5BB5982D8660AC00BA7ABB /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 4C5BB59F2D8660AC00BA7ABB;
-			remoteInfo = Athlytic;
+			remoteInfo = Liftiq;
 		};
 		4C5BB5BB2D8660AD00BA7ABB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4C5BB5982D8660AC00BA7ABB /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 4C5BB59F2D8660AC00BA7ABB;
-			remoteInfo = Athlytic;
+			remoteInfo = Liftiq;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		4C5BB5A02D8660AC00BA7ABB /* Athlytic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Athlytic.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		4C5BB5B02D8660AD00BA7ABB /* AthlyticTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AthlyticTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		4C5BB5BA2D8660AD00BA7ABB /* AthlyticUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AthlyticUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C5BB5A02D8660AC00BA7ABB /* Liftiq.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Liftiq.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C5BB5B02D8660AD00BA7ABB /* LiftiqTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LiftiqTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C5BB5BA2D8660AD00BA7ABB /* LiftiqUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LiftiqUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DAAE71822D88B4D0001B36F5 /* Exceptions for "Athlytic" folder in "Athlytic" target */ = {
+		DAAE71822D88B4D0001B36F5 /* Exceptions for "Liftiq" folder in "Liftiq" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 4C5BB59F2D8660AC00BA7ABB /* Athlytic */;
+			target = 4C5BB59F2D8660AC00BA7ABB /* Liftiq */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		4C5BB5A22D8660AC00BA7ABB /* Athlytic */ = {
+		4C5BB5A22D8660AC00BA7ABB /* Liftiq */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				DAAE71822D88B4D0001B36F5 /* Exceptions for "Athlytic" folder in "Athlytic" target */,
+				DAAE71822D88B4D0001B36F5 /* Exceptions for "Liftiq" folder in "Liftiq" target */,
 			);
-			path = Athlytic;
+			path = Liftiq;
 			sourceTree = "<group>";
 		};
-		4C5BB5B32D8660AD00BA7ABB /* AthlyticTests */ = {
+		4C5BB5B32D8660AD00BA7ABB /* LiftiqTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AthlyticTests;
+			path = LiftiqTests;
 			sourceTree = "<group>";
 		};
-		4C5BB5BD2D8660AD00BA7ABB /* AthlyticUITests */ = {
+		4C5BB5BD2D8660AD00BA7ABB /* LiftiqUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AthlyticUITests;
+			path = LiftiqUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -88,9 +88,9 @@
 		4C5BB5972D8660AC00BA7ABB = {
 			isa = PBXGroup;
 			children = (
-				4C5BB5A22D8660AC00BA7ABB /* Athlytic */,
-				4C5BB5B32D8660AD00BA7ABB /* AthlyticTests */,
-				4C5BB5BD2D8660AD00BA7ABB /* AthlyticUITests */,
+				4C5BB5A22D8660AC00BA7ABB /* Liftiq */,
+				4C5BB5B32D8660AD00BA7ABB /* LiftiqTests */,
+				4C5BB5BD2D8660AD00BA7ABB /* LiftiqUITests */,
 				4C5BB5A12D8660AC00BA7ABB /* Products */,
 			);
 			sourceTree = "<group>";
@@ -98,9 +98,9 @@
 		4C5BB5A12D8660AC00BA7ABB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4C5BB5A02D8660AC00BA7ABB /* Athlytic.app */,
-				4C5BB5B02D8660AD00BA7ABB /* AthlyticTests.xctest */,
-				4C5BB5BA2D8660AD00BA7ABB /* AthlyticUITests.xctest */,
+				4C5BB5A02D8660AC00BA7ABB /* Liftiq.app */,
+				4C5BB5B02D8660AD00BA7ABB /* LiftiqTests.xctest */,
+				4C5BB5BA2D8660AD00BA7ABB /* LiftiqUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,9 +108,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4C5BB59F2D8660AC00BA7ABB /* Athlytic */ = {
+		4C5BB59F2D8660AC00BA7ABB /* Liftiq */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4C5BB5C42D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "Athlytic" */;
+			buildConfigurationList = 4C5BB5C42D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "Liftiq" */;
 			buildPhases = (
 				4C5BB59C2D8660AC00BA7ABB /* Sources */,
 				4C5BB59D2D8660AC00BA7ABB /* Frameworks */,
@@ -121,18 +121,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				4C5BB5A22D8660AC00BA7ABB /* Athlytic */,
+				4C5BB5A22D8660AC00BA7ABB /* Liftiq */,
 			);
-			name = Athlytic;
+			name = Liftiq;
 			packageProductDependencies = (
 			);
-			productName = Athlytic;
-			productReference = 4C5BB5A02D8660AC00BA7ABB /* Athlytic.app */;
+			productName = Liftiq;
+			productReference = 4C5BB5A02D8660AC00BA7ABB /* Liftiq.app */;
 			productType = "com.apple.product-type.application";
 		};
-		4C5BB5AF2D8660AD00BA7ABB /* AthlyticTests */ = {
+		4C5BB5AF2D8660AD00BA7ABB /* LiftiqTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4C5BB5C72D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "AthlyticTests" */;
+			buildConfigurationList = 4C5BB5C72D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "LiftiqTests" */;
 			buildPhases = (
 				4C5BB5AC2D8660AD00BA7ABB /* Sources */,
 				4C5BB5AD2D8660AD00BA7ABB /* Frameworks */,
@@ -144,18 +144,18 @@
 				4C5BB5B22D8660AD00BA7ABB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				4C5BB5B32D8660AD00BA7ABB /* AthlyticTests */,
+				4C5BB5B32D8660AD00BA7ABB /* LiftiqTests */,
 			);
-			name = AthlyticTests;
+			name = LiftiqTests;
 			packageProductDependencies = (
 			);
-			productName = AthlyticTests;
-			productReference = 4C5BB5B02D8660AD00BA7ABB /* AthlyticTests.xctest */;
+			productName = LiftiqTests;
+			productReference = 4C5BB5B02D8660AD00BA7ABB /* LiftiqTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		4C5BB5B92D8660AD00BA7ABB /* AthlyticUITests */ = {
+		4C5BB5B92D8660AD00BA7ABB /* LiftiqUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4C5BB5CA2D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "AthlyticUITests" */;
+			buildConfigurationList = 4C5BB5CA2D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "LiftiqUITests" */;
 			buildPhases = (
 				4C5BB5B62D8660AD00BA7ABB /* Sources */,
 				4C5BB5B72D8660AD00BA7ABB /* Frameworks */,
@@ -167,13 +167,13 @@
 				4C5BB5BC2D8660AD00BA7ABB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				4C5BB5BD2D8660AD00BA7ABB /* AthlyticUITests */,
+				4C5BB5BD2D8660AD00BA7ABB /* LiftiqUITests */,
 			);
-			name = AthlyticUITests;
+			name = LiftiqUITests;
 			packageProductDependencies = (
 			);
-			productName = AthlyticUITests;
-			productReference = 4C5BB5BA2D8660AD00BA7ABB /* AthlyticUITests.xctest */;
+			productName = LiftiqUITests;
+			productReference = 4C5BB5BA2D8660AD00BA7ABB /* LiftiqUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -199,7 +199,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 4C5BB59B2D8660AC00BA7ABB /* Build configuration list for PBXProject "Athlytic" */;
+			buildConfigurationList = 4C5BB59B2D8660AC00BA7ABB /* Build configuration list for PBXProject "Liftiq" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -213,9 +213,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4C5BB59F2D8660AC00BA7ABB /* Athlytic */,
-				4C5BB5AF2D8660AD00BA7ABB /* AthlyticTests */,
-				4C5BB5B92D8660AD00BA7ABB /* AthlyticUITests */,
+				4C5BB59F2D8660AC00BA7ABB /* Liftiq */,
+				4C5BB5AF2D8660AD00BA7ABB /* LiftiqTests */,
+				4C5BB5B92D8660AD00BA7ABB /* LiftiqUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -271,12 +271,12 @@
 /* Begin PBXTargetDependency section */
 		4C5BB5B22D8660AD00BA7ABB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4C5BB59F2D8660AC00BA7ABB /* Athlytic */;
+			target = 4C5BB59F2D8660AC00BA7ABB /* Liftiq */;
 			targetProxy = 4C5BB5B12D8660AD00BA7ABB /* PBXContainerItemProxy */;
 		};
 		4C5BB5BC2D8660AD00BA7ABB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4C5BB59F2D8660AC00BA7ABB /* Athlytic */;
+			target = 4C5BB59F2D8660AC00BA7ABB /* Liftiq */;
 			targetProxy = 4C5BB5BB2D8660AD00BA7ABB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -406,14 +406,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Athlytic/Athlytic.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Liftiq/Liftiq.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Athlytic/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Liftiq/Preview Content\"";
 				DEVELOPMENT_TEAM = DK2AGL28AU;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Athlytic/Info.plist;
+				INFOPLIST_FILE = Liftiq/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -424,7 +424,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.Athlytic;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.Liftiq;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -437,14 +437,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Athlytic/Athlytic.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Liftiq/Liftiq.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Athlytic/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Liftiq/Preview Content\"";
 				DEVELOPMENT_TEAM = DK2AGL28AU;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Athlytic/Info.plist;
+				INFOPLIST_FILE = Liftiq/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -455,7 +455,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.Athlytic;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.Liftiq;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -472,12 +472,12 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.AthlyticTests;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.LiftiqTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Athlytic.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Athlytic";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Liftiq.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Liftiq";
 			};
 			name = Debug;
 		};
@@ -490,12 +490,12 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.AthlyticTests;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.LiftiqTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Athlytic.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Athlytic";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Liftiq.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Liftiq";
 			};
 			name = Release;
 		};
@@ -506,12 +506,12 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.AthlyticUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.LiftiqUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Athlytic;
+				TEST_TARGET_NAME = Liftiq;
 			};
 			name = Debug;
 		};
@@ -522,19 +522,19 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.AthlyticUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.LiftiqUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Athlytic;
+				TEST_TARGET_NAME = Liftiq;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4C5BB59B2D8660AC00BA7ABB /* Build configuration list for PBXProject "Athlytic" */ = {
+		4C5BB59B2D8660AC00BA7ABB /* Build configuration list for PBXProject "Liftiq" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4C5BB5C22D8660AD00BA7ABB /* Debug */,
@@ -543,7 +543,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4C5BB5C42D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "Athlytic" */ = {
+		4C5BB5C42D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "Liftiq" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4C5BB5C52D8660AD00BA7ABB /* Debug */,
@@ -552,7 +552,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4C5BB5C72D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "AthlyticTests" */ = {
+		4C5BB5C72D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "LiftiqTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4C5BB5C82D8660AD00BA7ABB /* Debug */,
@@ -561,7 +561,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4C5BB5CA2D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "AthlyticUITests" */ = {
+		4C5BB5CA2D8660AD00BA7ABB /* Build configuration list for PBXNativeTarget "LiftiqUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4C5BB5CB2D8660AD00BA7ABB /* Debug */,
