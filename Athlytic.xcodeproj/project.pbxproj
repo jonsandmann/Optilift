@@ -12,14 +12,14 @@
 			containerPortal = 4C5BB5982D8660AC00BA7ABB /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 4C5BB59F2D8660AC00BA7ABB;
-			remoteInfo = Optilift;
+			remoteInfo = Athlytic;
 		};
 		4C5BB5BB2D8660AD00BA7ABB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4C5BB5982D8660AC00BA7ABB /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 4C5BB59F2D8660AC00BA7ABB;
-			remoteInfo = Optilift;
+			remoteInfo = Athlytic;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -30,7 +30,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DAAE71822D88B4D0001B36F5 /* Exceptions for "Optilift" folder in "Athlytic" target */ = {
+		DAAE71822D88B4D0001B36F5 /* Exceptions for "Athlytic" folder in "Athlytic" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -40,22 +40,22 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		4C5BB5A22D8660AC00BA7ABB /* Optilift */ = {
+		4C5BB5A22D8660AC00BA7ABB /* Athlytic */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				DAAE71822D88B4D0001B36F5 /* Exceptions for "Optilift" folder in "Athlytic" target */,
+				DAAE71822D88B4D0001B36F5 /* Exceptions for "Athlytic" folder in "Athlytic" target */,
 			);
-			path = Optilift;
+			path = Athlytic;
 			sourceTree = "<group>";
 		};
-		4C5BB5B32D8660AD00BA7ABB /* OptiliftTests */ = {
+		4C5BB5B32D8660AD00BA7ABB /* AthlyticTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = OptiliftTests;
+			path = AthlyticTests;
 			sourceTree = "<group>";
 		};
-		4C5BB5BD2D8660AD00BA7ABB /* OptiliftUITests */ = {
+		4C5BB5BD2D8660AD00BA7ABB /* AthlyticUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = OptiliftUITests;
+			path = AthlyticUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -88,9 +88,9 @@
 		4C5BB5972D8660AC00BA7ABB = {
 			isa = PBXGroup;
 			children = (
-				4C5BB5A22D8660AC00BA7ABB /* Optilift */,
-				4C5BB5B32D8660AD00BA7ABB /* OptiliftTests */,
-				4C5BB5BD2D8660AD00BA7ABB /* OptiliftUITests */,
+				4C5BB5A22D8660AC00BA7ABB /* Athlytic */,
+				4C5BB5B32D8660AD00BA7ABB /* AthlyticTests */,
+				4C5BB5BD2D8660AD00BA7ABB /* AthlyticUITests */,
 				4C5BB5A12D8660AC00BA7ABB /* Products */,
 			);
 			sourceTree = "<group>";
@@ -121,12 +121,12 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				4C5BB5A22D8660AC00BA7ABB /* Optilift */,
+				4C5BB5A22D8660AC00BA7ABB /* Athlytic */,
 			);
 			name = Athlytic;
 			packageProductDependencies = (
 			);
-			productName = Optilift;
+			productName = Athlytic;
 			productReference = 4C5BB5A02D8660AC00BA7ABB /* Athlytic.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -144,12 +144,12 @@
 				4C5BB5B22D8660AD00BA7ABB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				4C5BB5B32D8660AD00BA7ABB /* OptiliftTests */,
+				4C5BB5B32D8660AD00BA7ABB /* AthlyticTests */,
 			);
 			name = AthlyticTests;
 			packageProductDependencies = (
 			);
-			productName = OptiliftTests;
+			productName = AthlyticTests;
 			productReference = 4C5BB5B02D8660AD00BA7ABB /* AthlyticTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
@@ -167,12 +167,12 @@
 				4C5BB5BC2D8660AD00BA7ABB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				4C5BB5BD2D8660AD00BA7ABB /* OptiliftUITests */,
+				4C5BB5BD2D8660AD00BA7ABB /* AthlyticUITests */,
 			);
 			name = AthlyticUITests;
 			packageProductDependencies = (
 			);
-			productName = OptiliftUITests;
+			productName = AthlyticUITests;
 			productReference = 4C5BB5BA2D8660AD00BA7ABB /* AthlyticUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
@@ -406,14 +406,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Optilift/Optilift.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Athlytic/Athlytic.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Optilift/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Athlytic/Preview Content\"";
 				DEVELOPMENT_TEAM = DK2AGL28AU;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Optilift/Info.plist;
+				INFOPLIST_FILE = Athlytic/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -424,7 +424,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.Optilift;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.Athlytic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -437,14 +437,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Optilift/Optilift.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Athlytic/Athlytic.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Optilift/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Athlytic/Preview Content\"";
 				DEVELOPMENT_TEAM = DK2AGL28AU;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Optilift/Info.plist;
+				INFOPLIST_FILE = Athlytic/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -455,7 +455,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.Optilift;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.Athlytic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -472,7 +472,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.OptiliftTests;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.AthlyticTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -490,7 +490,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.OptiliftTests;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.AthlyticTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -506,12 +506,12 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.OptiliftUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.AthlyticUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Optilift;
+				TEST_TARGET_NAME = Athlytic;
 			};
 			name = Debug;
 		};
@@ -522,12 +522,12 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.OptiliftUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = optimizedliving.AthlyticUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Optilift;
+				TEST_TARGET_NAME = Athlytic;
 			};
 			name = Release;
 		};
