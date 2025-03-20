@@ -26,23 +26,58 @@ struct ExercisesView: View {
     }
     
     var body: some View {
-        List {
-            ForEach(groupedExercises, id: \.0) { category, exercises in
-                Section(category) {
-                    ForEach(exercises) { exercise in
-                        NavigationLink(value: exercise) {
-                            Text(exercise.name ?? "")
-                        }
+        Group {
+            if exercises.isEmpty {
+                VStack(spacing: 20) {
+                    Image(systemName: "dumbbell.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.blue)
+                        .padding(.bottom, 10)
+                    
+                    Text("No Exercises Yet")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    Text("Add your first exercise to start tracking your workouts")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                    
+                    Button {
+                        showingAddExercise = true
+                    } label: {
+                        Label("Add Exercise", systemImage: "plus.circle.fill")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(width: 200)
+                            .padding()
+                            .background(Color.blue)
+                            .cornerRadius(12)
                     }
-                    .onDelete { indexSet in
-                        let exercisesToDelete = indexSet.map { exercises[$0] }
-                        exercisesToDelete.forEach { exercise in
-                            viewContext.delete(exercise)
-                        }
-                        do {
-                            try viewContext.save()
-                        } catch {
-                            print("Error deleting exercise: \(error)")
+                    .padding(.top, 20)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    ForEach(groupedExercises, id: \.0) { category, exercises in
+                        Section(category) {
+                            ForEach(exercises) { exercise in
+                                NavigationLink(value: exercise) {
+                                    Text(exercise.name ?? "")
+                                }
+                            }
+                            .onDelete { indexSet in
+                                let exercisesToDelete = indexSet.map { exercises[$0] }
+                                exercisesToDelete.forEach { exercise in
+                                    viewContext.delete(exercise)
+                                }
+                                do {
+                                    try viewContext.save()
+                                } catch {
+                                    print("Error deleting exercise: \(error)")
+                                }
+                            }
                         }
                     }
                 }
@@ -85,6 +120,8 @@ struct AddExerciseView: View {
     @State private var name = ""
     @State private var category = "Chest"
     @State private var notes = ""
+    @State private var showingAlert = false
+    @State private var alertMessage = ""
     
     let categories = [
         "Chest",
@@ -99,12 +136,21 @@ struct AddExerciseView: View {
     
     var body: some View {
         Form {
-            TextField("Exercise Name", text: $name)
+            Section {
+                TextField("Exercise Name", text: $name)
+            }
             
-            Picker("Category", selection: $category) {
-                ForEach(categories, id: \.self) { category in
-                    Text(category).tag(category)
+            Section {
+                Picker("Category", selection: $category) {
+                    ForEach(categories, id: \.self) { category in
+                        Text(category).tag(category)
+                    }
                 }
+                .pickerStyle(.menu)
+            } header: {
+                Text("Category (Required)")
+            } footer: {
+                Text("Select a category to help organize your exercises")
             }
             
             Section("Notes (Optional)") {
@@ -122,21 +168,31 @@ struct AddExerciseView: View {
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Add") {
-                    let exercise = CDExercise(context: viewContext)
-                    exercise.ensureUUID()
-                    exercise.name = name
-                    exercise.category = category
-                    exercise.notes = notes.isEmpty ? nil : notes
-                    
-                    do {
-                        try viewContext.save()
-                        dismiss()
-                    } catch {
-                        print("Error saving exercise: \(error)")
-                    }
+                    addExercise()
                 }
                 .disabled(name.isEmpty)
             }
+        }
+        .alert("Error", isPresented: $showingAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertMessage)
+        }
+    }
+    
+    private func addExercise() {
+        let exercise = CDExercise(context: viewContext)
+        exercise.ensureUUID()
+        exercise.name = name
+        exercise.category = category
+        exercise.notes = notes.isEmpty ? nil : notes
+        
+        do {
+            try viewContext.save()
+            dismiss()
+        } catch {
+            alertMessage = "Error saving exercise: \(error.localizedDescription)"
+            showingAlert = true
         }
     }
 }
