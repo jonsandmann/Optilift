@@ -26,88 +26,66 @@ enum TimeRange: Int, CaseIterable {
 
 struct DashboardView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @FetchRequest private var todaysWorkoutSets: FetchedResults<CDWorkoutSet>
-    @FetchRequest private var lastMonthSets: FetchedResults<CDWorkoutSet>
-    @FetchRequest private var thisYearSets: FetchedResults<CDWorkoutSet>
-    @FetchRequest private var lastYearSets: FetchedResults<CDWorkoutSet>
-    @FetchRequest private var thisWeekWorkouts: FetchedResults<CDWorkout>
-    @FetchRequest private var lastWeekWorkouts: FetchedResults<CDWorkout>
-    
     @State private var selectedTimeRange: TimeRange = .threeMonths
     @State private var showingAddWorkout = false
     @State private var selectedCurrentVolume: Double = 0
     @State private var selectedPreviousVolume: Double = 0
+    
+    // Single fetch request for workout sets
+    @FetchRequest private var workoutSets: FetchedResults<CDWorkoutSet>
     
     private func formatVolume(_ volumeLbs: Double) -> String {
         return NumberFormatter.volumeFormatter.string(from: NSNumber(value: volumeLbs)) ?? "0"
     }
     
     init() {
+        // Initialize with a default predicate that will be updated
+        _workoutSets = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \CDWorkoutSet.date, ascending: true)],
+            predicate: NSPredicate(format: "date >= %@", Date() as NSDate)
+        )
+    }
+    
+    private func updateFetchRequest() {
         let calendar = Calendar.current
         let now = Date()
-        let startOfToday = calendar.startOfDay(for: now)
-        let endOfToday = calendar.date(byAdding: .day, value: 1, to: startOfToday)!
         
-        // Today's sets
-        _todaysWorkoutSets = FetchRequest(
-            sortDescriptors: [NSSortDescriptor(keyPath: \CDWorkoutSet.date, ascending: true)],
-            predicate: NSPredicate(format: "date >= %@ AND date < %@", startOfToday as NSDate, endOfToday as NSDate)
-        )
+        // Calculate date range based on selected time range
+        let startDate: Date
+        let endDate: Date
         
-        // Last month's sets
-        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
-        let startOfLastMonth = calendar.date(byAdding: .month, value: -1, to: startOfMonth)!
-        let endOfLastMonth = calendar.date(byAdding: .day, value: -1, to: startOfMonth)!
+        switch selectedTimeRange {
+        case .oneMonth:
+            startDate = calendar.date(byAdding: .month, value: -1, to: now)!
+            endDate = now
+        case .threeMonths:
+            startDate = calendar.date(byAdding: .month, value: -3, to: now)!
+            endDate = now
+        case .sixMonths:
+            startDate = calendar.date(byAdding: .month, value: -6, to: now)!
+            endDate = now
+        case .twelveMonths:
+            startDate = calendar.date(byAdding: .month, value: -12, to: now)!
+            endDate = now
+        case .twentyFourMonths:
+            startDate = calendar.date(byAdding: .month, value: -24, to: now)!
+            endDate = now
+        }
         
-        _lastMonthSets = FetchRequest(
-            sortDescriptors: [NSSortDescriptor(keyPath: \CDWorkoutSet.date, ascending: true)],
-            predicate: NSPredicate(format: "date >= %@ AND date <= %@", startOfLastMonth as NSDate, endOfLastMonth as NSDate)
-        )
+        // Update the fetch request predicate
+        workoutSets.nsPredicate = NSPredicate(format: "date >= %@ AND date <= %@", startDate as NSDate, endDate as NSDate)
         
-        // This year's sets
-        let startOfYear = calendar.date(from: calendar.dateComponents([.year], from: now))!
-        let endOfYear = calendar.date(byAdding: DateComponents(year: 1, day: -1), to: startOfYear)!
-        _thisYearSets = FetchRequest(
-            sortDescriptors: [NSSortDescriptor(keyPath: \CDWorkoutSet.date, ascending: true)],
-            predicate: NSPredicate(format: "date >= %@ AND date <= %@", startOfYear as NSDate, endOfYear as NSDate)
-        )
-        
-        // Last year's sets
-        let startOfLastYear = calendar.date(byAdding: .year, value: -1, to: startOfYear)!
-        _lastYearSets = FetchRequest(
-            sortDescriptors: [NSSortDescriptor(keyPath: \CDWorkoutSet.date, ascending: true)],
-            predicate: NSPredicate(format: "date >= %@", startOfLastYear as NSDate)
-        )
-        
-        // This week's workouts
-        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
-        let endOfWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: startOfWeek)!
-        _thisWeekWorkouts = FetchRequest(
-            sortDescriptors: [NSSortDescriptor(keyPath: \CDWorkout.date, ascending: true)],
-            predicate: NSPredicate(format: "date >= %@ AND date < %@", startOfWeek as NSDate, endOfWeek as NSDate)
-        )
-        
-        // Last week's workouts
-        let startOfLastWeek = calendar.date(byAdding: .weekOfYear, value: -1, to: startOfWeek)!
-        let endOfLastWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: startOfLastWeek)!
-        _lastWeekWorkouts = FetchRequest(
-            sortDescriptors: [NSSortDescriptor(keyPath: \CDWorkout.date, ascending: true)],
-            predicate: NSPredicate(format: "date >= %@ AND date < %@", startOfLastWeek as NSDate, endOfLastWeek as NSDate)
-        )
+        // Perform the fetch
+        try? viewContext.fetch(workoutSets.nsFetchRequest)
     }
     
     private var todaysVolume: Double {
-        todaysWorkoutSets.reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
-    }
-    
-    private var thisMonthVolume: Double {
         let calendar = Calendar.current
-        let now = Date()
-        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
-        let endOfMonth = calendar.date(byAdding: DateComponents(month: 1), to: startOfMonth)!
+        let startOfToday = calendar.startOfDay(for: Date())
+        let endOfToday = calendar.date(byAdding: .day, value: 1, to: startOfToday)!
         
-        return thisYearSets
-            .filter { guard let date = $0.date else { return false }; return date >= startOfMonth && date < endOfMonth }
+        return workoutSets
+            .filter { $0.date ?? Date() >= startOfToday && $0.date ?? Date() < endOfToday }
             .reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
     }
     
@@ -118,8 +96,8 @@ struct DashboardView: View {
         let startOfLastMonth = calendar.date(byAdding: .month, value: -1, to: startOfMonth)!
         let endOfLastMonth = calendar.date(byAdding: .day, value: -1, to: startOfMonth)!
         
-        return thisYearSets
-            .filter { guard let date = $0.date else { return false }; return date >= startOfLastMonth && date <= endOfLastMonth }
+        return workoutSets
+            .filter { $0.date ?? Date() >= startOfLastMonth && $0.date ?? Date() <= endOfLastMonth }
             .reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
     }
     
@@ -129,8 +107,8 @@ struct DashboardView: View {
         let startOfYear = calendar.date(from: calendar.dateComponents([.year], from: now))!
         let endOfYear = calendar.date(byAdding: DateComponents(year: 1, day: -1), to: startOfYear)!
         
-        return thisYearSets
-            .filter { guard let date = $0.date else { return false }; return date >= startOfYear && date <= endOfYear }
+        return workoutSets
+            .filter { $0.date ?? Date() >= startOfYear && $0.date ?? Date() <= endOfYear }
             .reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
     }
     
@@ -139,11 +117,244 @@ struct DashboardView: View {
         let now = Date()
         let startOfYear = calendar.date(from: calendar.dateComponents([.year], from: now))!
         let startOfLastYear = calendar.date(byAdding: .year, value: -1, to: startOfYear)!
-        let endOfLastYear = calendar.date(byAdding: .year, value: -1, to: now)!
         
-        return lastYearSets
-            .filter { guard let date = $0.date else { return false }; return date >= startOfLastYear && date <= endOfLastYear }
+        return workoutSets
+            .filter { $0.date ?? Date() >= startOfLastYear }
             .reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
+    }
+    
+    private var thisWeekWorkoutCount: Int {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
+        let endOfWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: startOfWeek)!
+        
+        return Set(workoutSets
+            .filter { $0.date ?? Date() >= startOfWeek && $0.date ?? Date() < endOfWeek }
+            .map { $0.workout?.date ?? Date() })
+            .count
+    }
+    
+    private var lastWeekWorkoutCount: Int {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
+        let startOfLastWeek = calendar.date(byAdding: .weekOfYear, value: -1, to: startOfWeek)!
+        let endOfLastWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: startOfLastWeek)!
+        
+        return Set(workoutSets
+            .filter { $0.date ?? Date() >= startOfLastWeek && $0.date ?? Date() < endOfLastWeek }
+            .map { $0.workout?.date ?? Date() })
+            .count
+    }
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+                    Section {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text("Today's Volume")
+                                    .font(.headline)
+                                Spacer()
+                                Text("\(NumberFormatter.volumeFormatter.string(from: NSNumber(value: todaysVolume)) ?? "0") lbs")
+                                    .font(.title2)
+                                    .bold()
+                            }
+                            
+                            if workoutSets.isEmpty {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "figure.strengthtraining.traditional")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(.blue)
+                                    Text("No sets logged today")
+                                        .font(.headline)
+                                    Text("Add your first set to start tracking")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 20)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    
+                    Section("Monthly Comparison") {
+                        if workoutSets.isEmpty {
+                            VStack(spacing: 8) {
+                                Image(systemName: "chart.bar")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.blue)
+                                Text("No monthly data available")
+                                    .font(.headline)
+                                Text("Start logging workouts to see your progress")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 20)
+                        } else {
+                            VStack(alignment: .leading, spacing: 12) {
+                                let volumes = getCumulativeVolumes()
+                                CumulativeVolumeChart(
+                                    currentMonthData: volumes.currentMonth,
+                                    lastMonthData: volumes.lastMonth,
+                                    currentYearData: volumes.currentYear,
+                                    lastYearData: volumes.lastYear,
+                                    currentValue: $selectedCurrentVolume,
+                                    previousValue: $selectedPreviousVolume
+                                )
+                                .onAppear {
+                                    selectedCurrentVolume = volumes.currentMonth.last?.volume ?? 0
+                                    selectedPreviousVolume = volumes.lastMonth.last?.volume ?? 0
+                                }
+                            }
+                        }
+                    }
+                    
+                    Section("Yearly Comparison") {
+                        if workoutSets.isEmpty {
+                            VStack(spacing: 8) {
+                                Image(systemName: "chart.line.uptrend.xyaxis")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.blue)
+                                Text("No yearly data available")
+                                    .font(.headline)
+                                Text("Track your progress over time")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 20)
+                        } else {
+                            VolumeComparisonView(
+                                title: "Year to Date",
+                                currentValue: .constant(thisYearVolume),
+                                previousValue: .constant(lastYearVolume)
+                            )
+                        }
+                    }
+                    
+                    Section("Weekly Activity") {
+                        if thisWeekWorkoutCount == 0 && lastWeekWorkoutCount == 0 {
+                            VStack(spacing: 8) {
+                                Image(systemName: "calendar")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.blue)
+                                Text("No weekly activity")
+                                    .font(.headline)
+                                Text("Start logging workouts to track your activity")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 20)
+                        } else {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text("This Week")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    Text("\(thisWeekWorkoutCount) workouts")
+                                        .font(.headline)
+                                }
+                                Spacer()
+                                VStack(alignment: .trailing) {
+                                    Text("Last Week")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    Text("\(lastWeekWorkoutCount) workouts")
+                                        .font(.headline)
+                                }
+                            }
+                        }
+                    }
+                    
+                    Section("Volume Trend") {
+                        if workoutSets.isEmpty {
+                            VStack(spacing: 8) {
+                                Image(systemName: "chart.bar.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.blue)
+                                Text("No volume trend data")
+                                    .font(.headline)
+                                Text("Log workouts to see your volume trends")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 20)
+                        } else {
+                            VStack(alignment: .leading, spacing: 12) {
+                                // Time range selector
+                                Picker("Time Range", selection: $selectedTimeRange) {
+                                    ForEach(TimeRange.allCases, id: \.self) { range in
+                                        Text(range.title).tag(range)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                                .padding(.bottom, 4)
+                                
+                                if selectedTimeRange == .oneMonth {
+                                    VolumeTrendChart(volumes: monthlyVolumes())
+                                } else {
+                                    MonthlyVolumeChart(volumes: monthlyVolumes(), timeRange: selectedTimeRange)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Dashboard")
+            .onChange(of: selectedTimeRange) { _ in
+                updateFetchRequest()
+            }
+        }
+    }
+    
+    private func monthlyVolumes() -> [(date: Date, volume: Double)] {
+        let calendar = Calendar.current
+        let now = Date()
+        // Start from the beginning of the month that's monthsAgo months ago
+        let monthsAgo = calendar.date(byAdding: .month, value: -selectedTimeRange.rawValue + 1, to: now)!
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: monthsAgo))!
+        
+        // Create a dictionary to store volumes
+        var volumeDict: [Date: Double] = [:]
+        
+        // Get all sets from Core Data
+        let allSetsFetchRequest: NSFetchRequest<CDWorkoutSet> = CDWorkoutSet.fetchRequest()
+        allSetsFetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \CDWorkoutSet.date, ascending: true)]
+        
+        do {
+            let allSets = try viewContext.fetch(allSetsFetchRequest)
+            
+            // Calculate volumes for each set
+            let filteredSets = allSets.filter { guard let date = $0.date else { return false }; return date >= startOfMonth }
+            
+            for set in filteredSets {
+                guard let date = set.date else { continue }
+                let setVolume = Double(set.reps) * set.weight
+                
+                if selectedTimeRange == .oneMonth {
+                    // For 1M view, group by day
+                    let dayStart = calendar.startOfDay(for: date)
+                    volumeDict[dayStart, default: 0] += setVolume
+                } else {
+                    // For all other views (3M, 6M, 1Y, 2Y), group by month
+                    let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: date))!
+                    volumeDict[monthStart, default: 0] += setVolume
+                }
+            }
+        } catch {
+            print("Error fetching sets: \(error)")
+        }
+        
+        // Convert dictionary to array and sort by date
+        return volumeDict.map { ($0.key, $0.value) }
+            .sorted { $0.0 < $1.0 }
     }
     
     private func getCumulativeVolumes() -> (
@@ -162,11 +373,11 @@ struct DashboardView: View {
         let endOfLastYear = calendar.date(byAdding: .year, value: 1, to: startOfLastYear)!
         
         // Get all sets for current month
-        let currentMonthSets = thisYearSets.filter { guard let date = $0.date else { return false }; return date >= startOfMonth }
-        let lastMonthSets = thisYearSets.filter { guard let date = $0.date else { return false }; return date >= startOfLastMonth && date <= endOfLastMonth }
-        let currentYearSets = thisYearSets.filter { guard let date = $0.date else { return false }; return date >= startOfYear }
+        let currentMonthSets = workoutSets.filter { guard let date = $0.date else { return false }; return date >= startOfMonth }
+        let lastMonthSets = workoutSets.filter { guard let date = $0.date else { return false }; return date >= startOfLastMonth && date <= endOfLastMonth }
+        let currentYearSets = workoutSets.filter { guard let date = $0.date else { return false }; return date >= startOfYear }
         // Remove the end date filter for last year to get the full year's data
-        let lastYearSets = lastYearSets.filter { guard let date = $0.date else { return false }; return date >= startOfLastYear }
+        let lastYearSets = workoutSets.filter { guard let date = $0.date else { return false }; return date >= startOfLastYear }
         
         // Process current month data
         var currentMonthData: [(date: Date, volume: Double)] = []
@@ -229,208 +440,6 @@ struct DashboardView: View {
         }
         
         return (currentMonth: currentMonthData, lastMonth: lastMonthData, currentYear: currentYearData, lastYear: lastYearData)
-    }
-    
-    var body: some View {
-        List {
-            Section {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Today's Volume")
-                            .font(.headline)
-                        Spacer()
-                        Text("\(NumberFormatter.volumeFormatter.string(from: NSNumber(value: todaysVolume)) ?? "0") lbs")
-                            .font(.title2)
-                            .bold()
-                    }
-                    
-                    if todaysWorkoutSets.isEmpty {
-                        VStack(spacing: 8) {
-                            Image(systemName: "figure.strengthtraining.traditional")
-                                .font(.system(size: 40))
-                                .foregroundColor(.blue)
-                            Text("No sets logged today")
-                                .font(.headline)
-                            Text("Add your first set to start tracking")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 20)
-                    }
-                }
-                .padding(.vertical, 8)
-            }
-            
-            Section("Monthly Comparison") {
-                if thisYearSets.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "chart.bar")
-                            .font(.system(size: 40))
-                            .foregroundColor(.blue)
-                        Text("No monthly data available")
-                            .font(.headline)
-                        Text("Start logging workouts to see your progress")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-                } else {
-                    VStack(alignment: .leading, spacing: 12) {
-                        let volumes = getCumulativeVolumes()
-                        CumulativeVolumeChart(
-                            currentMonthData: volumes.currentMonth,
-                            lastMonthData: volumes.lastMonth,
-                            currentYearData: volumes.currentYear,
-                            lastYearData: volumes.lastYear,
-                            currentValue: $selectedCurrentVolume,
-                            previousValue: $selectedPreviousVolume
-                        )
-                        .onAppear {
-                            selectedCurrentVolume = volumes.currentMonth.last?.volume ?? 0
-                            selectedPreviousVolume = volumes.lastMonth.last?.volume ?? 0
-                        }
-                    }
-                }
-            }
-            
-            Section("Yearly Comparison") {
-                if thisYearSets.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: 40))
-                            .foregroundColor(.blue)
-                        Text("No yearly data available")
-                            .font(.headline)
-                        Text("Track your progress over time")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-                } else {
-                    VolumeComparisonView(
-                        title: "Year to Date",
-                        currentValue: .constant(thisYearVolume),
-                        previousValue: .constant(lastYearVolume)
-                    )
-                }
-            }
-            
-            Section("Weekly Activity") {
-                if thisWeekWorkouts.isEmpty && lastWeekWorkouts.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 40))
-                            .foregroundColor(.blue)
-                        Text("No weekly activity")
-                            .font(.headline)
-                        Text("Start logging workouts to track your activity")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-                } else {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("This Week")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            Text("\(thisWeekWorkouts.count) workouts")
-                                .font(.headline)
-                        }
-                        Spacer()
-                        VStack(alignment: .trailing) {
-                            Text("Last Week")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            Text("\(lastWeekWorkouts.count) workouts")
-                                .font(.headline)
-                        }
-                    }
-                }
-            }
-            
-            Section("Volume Trend") {
-                if thisYearSets.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "chart.bar.fill")
-                            .font(.system(size: 40))
-                            .foregroundColor(.blue)
-                        Text("No volume trend data")
-                            .font(.headline)
-                        Text("Log workouts to see your volume trends")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-                } else {
-                    VStack(alignment: .leading, spacing: 12) {
-                        // Time range selector
-                        Picker("Time Range", selection: $selectedTimeRange) {
-                            ForEach(TimeRange.allCases, id: \.self) { range in
-                                Text(range.title).tag(range)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .padding(.bottom, 4)
-                        
-                        if selectedTimeRange == .oneMonth {
-                            VolumeTrendChart(volumes: monthlyVolumes())
-                        } else {
-                            MonthlyVolumeChart(volumes: monthlyVolumes(), timeRange: selectedTimeRange)
-                        }
-                    }
-                }
-            }
-        }
-        .navigationTitle("Dashboard")
-    }
-    
-    private func monthlyVolumes() -> [(date: Date, volume: Double)] {
-        let calendar = Calendar.current
-        let now = Date()
-        // Start from the beginning of the month that's monthsAgo months ago
-        let monthsAgo = calendar.date(byAdding: .month, value: -selectedTimeRange.rawValue + 1, to: now)!
-        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: monthsAgo))!
-        
-        // Create a dictionary to store volumes
-        var volumeDict: [Date: Double] = [:]
-        
-        // Get all sets from Core Data
-        let allSetsFetchRequest: NSFetchRequest<CDWorkoutSet> = CDWorkoutSet.fetchRequest()
-        allSetsFetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \CDWorkoutSet.date, ascending: true)]
-        
-        do {
-            let allSets = try viewContext.fetch(allSetsFetchRequest)
-            
-            // Calculate volumes for each set
-            let filteredSets = allSets.filter { guard let date = $0.date else { return false }; return date >= startOfMonth }
-            
-            for set in filteredSets {
-                guard let date = set.date else { continue }
-                let setVolume = Double(set.reps) * set.weight
-                
-                if selectedTimeRange == .oneMonth {
-                    // For 1M view, group by day
-                    let dayStart = calendar.startOfDay(for: date)
-                    volumeDict[dayStart, default: 0] += setVolume
-                } else {
-                    // For all other views (3M, 6M, 1Y, 2Y), group by month
-                    let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: date))!
-                    volumeDict[monthStart, default: 0] += setVolume
-                }
-            }
-        } catch {
-            print("Error fetching sets: \(error)")
-        }
-        
-        // Convert dictionary to array and sort by date
-        return volumeDict.map { ($0.key, $0.value) }
-            .sorted { $0.0 < $1.0 }
     }
 }
 
