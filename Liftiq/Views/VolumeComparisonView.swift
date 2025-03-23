@@ -2,8 +2,8 @@ import SwiftUI
 
 struct VolumeComparisonView: View {
     let title: String
-    let currentValue: Double
-    let previousValue: Double
+    @Binding var currentValue: Double
+    @Binding var previousValue: Double
     
     private var percentageChange: Double {
         guard previousValue > 0 else { return 0 }

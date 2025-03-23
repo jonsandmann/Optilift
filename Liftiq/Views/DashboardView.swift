@@ -74,10 +74,9 @@ struct DashboardView: View {
         
         // Last year's sets
         let startOfLastYear = calendar.date(byAdding: .year, value: -1, to: startOfYear)!
-        let endOfLastYear = calendar.date(byAdding: .year, value: -1, to: now)!
         _lastYearSets = FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \CDWorkoutSet.date, ascending: true)],
-            predicate: NSPredicate(format: "date >= %@ AND date <= %@", startOfLastYear as NSDate, endOfLastYear as NSDate)
+            predicate: NSPredicate(format: "date >= %@", startOfLastYear as NSDate)
         )
         
         // This week's workouts
@@ -147,16 +146,27 @@ struct DashboardView: View {
             .reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
     }
     
-    private func getCumulativeVolumes() -> (current: [(date: Date, volume: Double)], last: [(date: Date, volume: Double)]) {
+    private func getCumulativeVolumes() -> (
+        currentMonth: [(date: Date, volume: Double)],
+        lastMonth: [(date: Date, volume: Double)],
+        currentYear: [(date: Date, volume: Double)],
+        lastYear: [(date: Date, volume: Double)]
+    ) {
         let calendar = Calendar.current
         let now = Date()
         let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
         let startOfLastMonth = calendar.date(byAdding: .month, value: -1, to: startOfMonth)!
         let endOfLastMonth = calendar.date(byAdding: .day, value: -1, to: startOfMonth)!
+        let startOfYear = calendar.date(from: calendar.dateComponents([.year], from: now))!
+        let startOfLastYear = calendar.date(byAdding: .year, value: -1, to: startOfYear)!
+        let endOfLastYear = calendar.date(byAdding: .year, value: 1, to: startOfLastYear)!
         
         // Get all sets for current month
         let currentMonthSets = thisYearSets.filter { guard let date = $0.date else { return false }; return date >= startOfMonth }
         let lastMonthSets = thisYearSets.filter { guard let date = $0.date else { return false }; return date >= startOfLastMonth && date <= endOfLastMonth }
+        let currentYearSets = thisYearSets.filter { guard let date = $0.date else { return false }; return date >= startOfYear }
+        // Remove the end date filter for last year to get the full year's data
+        let lastYearSets = lastYearSets.filter { guard let date = $0.date else { return false }; return date >= startOfLastYear }
         
         // Process current month data
         var currentMonthData: [(date: Date, volume: Double)] = []
@@ -188,7 +198,37 @@ struct DashboardView: View {
             }
         }
         
-        return (current: currentMonthData, last: lastMonthData)
+        // Process current year data (up to today)
+        var currentYearData: [(date: Date, volume: Double)] = []
+        runningVolume = 0
+        let currentYearDays = calendar.component(.dayOfYear, from: now)
+        
+        for day in 1...currentYearDays {
+            if let date = calendar.date(byAdding: .day, value: day - 1, to: startOfYear) {
+                let dayVolume = currentYearSets
+                    .filter { guard let setDate = $0.date else { return false }; return calendar.isDate(setDate, inSameDayAs: date) }
+                    .reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
+                runningVolume += dayVolume
+                currentYearData.append((date: date, volume: runningVolume))
+            }
+        }
+        
+        // Process last year data (full year)
+        var lastYearData: [(date: Date, volume: Double)] = []
+        runningVolume = 0
+        let lastYearDays = calendar.range(of: .day, in: .year, for: startOfLastYear)?.count ?? 0
+        
+        for day in 1...lastYearDays {
+            if let date = calendar.date(byAdding: .day, value: day - 1, to: startOfLastYear) {
+                let dayVolume = lastYearSets
+                    .filter { guard let setDate = $0.date else { return false }; return calendar.isDate(setDate, inSameDayAs: date) }
+                    .reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
+                runningVolume += dayVolume
+                lastYearData.append((date: date, volume: runningVolume))
+            }
+        }
+        
+        return (currentMonth: currentMonthData, lastMonth: lastMonthData, currentYear: currentYearData, lastYear: lastYearData)
     }
     
     var body: some View {
@@ -239,21 +279,17 @@ struct DashboardView: View {
                 } else {
                     VStack(alignment: .leading, spacing: 12) {
                         let volumes = getCumulativeVolumes()
-                        VolumeComparisonView(
-                            title: "Month to Date",
-                            currentValue: selectedCurrentVolume,
-                            previousValue: selectedPreviousVolume
-                        )
-                        
                         CumulativeVolumeChart(
-                            currentMonthData: volumes.current,
-                            lastMonthData: volumes.last,
+                            currentMonthData: volumes.currentMonth,
+                            lastMonthData: volumes.lastMonth,
+                            currentYearData: volumes.currentYear,
+                            lastYearData: volumes.lastYear,
                             currentValue: $selectedCurrentVolume,
                             previousValue: $selectedPreviousVolume
                         )
                         .onAppear {
-                            selectedCurrentVolume = volumes.current.last?.volume ?? 0
-                            selectedPreviousVolume = volumes.last.last?.volume ?? 0
+                            selectedCurrentVolume = volumes.currentMonth.last?.volume ?? 0
+                            selectedPreviousVolume = volumes.lastMonth.last?.volume ?? 0
                         }
                     }
                 }
@@ -276,8 +312,8 @@ struct DashboardView: View {
                 } else {
                     VolumeComparisonView(
                         title: "Year to Date",
-                        currentValue: thisYearVolume,
-                        previousValue: lastYearVolume
+                        currentValue: .constant(thisYearVolume),
+                        previousValue: .constant(lastYearVolume)
                     )
                 }
             }
