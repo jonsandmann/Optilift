@@ -393,7 +393,9 @@ struct DashboardView: View {
     private func monthlyVolumes() -> [(date: Date, volume: Double)] {
         let calendar = Calendar.current
         let now = Date()
-        let monthsAgo = calendar.date(byAdding: .month, value: -selectedTimeRange.rawValue, to: now)!
+        // Start from the beginning of the month that's monthsAgo months ago
+        let monthsAgo = calendar.date(byAdding: .month, value: -selectedTimeRange.rawValue + 1, to: now)!
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: monthsAgo))!
         
         // Create a dictionary to store volumes
         var volumeDict: [Date: Double] = [:]
@@ -406,7 +408,7 @@ struct DashboardView: View {
             let allSets = try viewContext.fetch(allSetsFetchRequest)
             
             // Calculate volumes for each set
-            let filteredSets = allSets.filter { guard let date = $0.date else { return false }; return date >= monthsAgo }
+            let filteredSets = allSets.filter { guard let date = $0.date else { return false }; return date >= startOfMonth }
             
             for set in filteredSets {
                 guard let date = set.date else { continue }
