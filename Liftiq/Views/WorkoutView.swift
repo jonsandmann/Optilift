@@ -7,8 +7,6 @@ struct WorkoutView: View {
     @State private var showingAddSet = false
     @State private var selectedDate = Date()
     @State private var setToEdit: CDWorkoutSet?
-    @State private var showingReassignSheet = false
-    @State private var selectedSet: CDWorkoutSet?
     
     init() {
         let calendar = Calendar.current
@@ -40,10 +38,7 @@ struct WorkoutView: View {
                 VolumeCardView(volume: todaysVolume, sets: Array(todaysSets))
             }
             AddSetButtonView(showingAddSet: $showingAddSet)
-            SetsListView(setsByExercise: setsByExercise, setToEdit: $setToEdit, deleteSet: deleteSet, onReassignSet: { set in
-                selectedSet = set
-                showingReassignSheet = true
-            })
+            SetsListView(setsByExercise: setsByExercise, setToEdit: $setToEdit, deleteSet: deleteSet, duplicateSet: duplicateSet)
         }
         .listStyle(.insetGrouped)
         .navigationTitle("Workout")
@@ -53,11 +48,6 @@ struct WorkoutView: View {
         .sheet(item: $setToEdit) { set in
             EditSetView(set: set)
         }
-        .sheet(isPresented: $showingReassignSheet) {
-            if let set = selectedSet {
-                ReassignSetView(set: set)
-            }
-        }
     }
     
     private func deleteSet(_ set: CDWorkoutSet) {
@@ -66,6 +56,22 @@ struct WorkoutView: View {
             try viewContext.save()
         } catch {
             print("Error deleting set: \(error)")
+        }
+    }
+    
+    private func duplicateSet(_ set: CDWorkoutSet) {
+        let newSet = CDWorkoutSet(context: viewContext)
+        newSet.ensureUUID()
+        newSet.reps = set.reps
+        newSet.weight = set.weight
+        newSet.exercise = set.exercise
+        newSet.date = Date() // Set to current time
+        newSet.workout = set.workout
+        
+        do {
+            try viewContext.save()
+        } catch {
+            print("Error duplicating set: \(error)")
         }
     }
 }
@@ -135,13 +141,13 @@ struct SetsListView: View {
     let setsByExercise: [(String, [CDWorkoutSet])]
     @Binding var setToEdit: CDWorkoutSet?
     let deleteSet: (CDWorkoutSet) -> Void
-    let onReassignSet: (CDWorkoutSet) -> Void
+    let duplicateSet: (CDWorkoutSet) -> Void
     
     var body: some View {
         ForEach(setsByExercise, id: \.0) { exerciseName, sets in
             Section(exerciseName) {
                 ForEach(sets) { set in
-                    SetRowView(set: set, setToEdit: $setToEdit, deleteSet: deleteSet, onReassignSet: onReassignSet)
+                    SetRowView(set: set, setToEdit: $setToEdit, deleteSet: deleteSet, duplicateSet: duplicateSet)
                 }
             }
         }

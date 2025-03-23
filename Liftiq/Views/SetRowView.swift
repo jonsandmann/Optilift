@@ -5,7 +5,7 @@ struct SetRowView: View {
     let set: CDWorkoutSet
     @Binding var setToEdit: CDWorkoutSet?
     let deleteSet: (CDWorkoutSet) -> Void
-    let onReassignSet: (CDWorkoutSet) -> Void
+    let duplicateSet: (CDWorkoutSet) -> Void
     
     private var setVolume: Double {
         Double(set.reps) * set.weight
@@ -25,20 +25,19 @@ struct SetRowView: View {
             setToEdit = set
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            if set.exercise == nil {
-                Button {
-                    onReassignSet(set)
-                } label: {
-                    Label("Reassign", systemImage: "arrow.triangle.2.circlepath")
-                }
-                .tint(.blue)
-            }
-            
             Button(role: .destructive) {
                 deleteSet(set)
             } label: {
                 Label("Delete", systemImage: "trash")
             }
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+            Button {
+                duplicateSet(set)
+            } label: {
+                Label("Duplicate", systemImage: "plus.square.on.square")
+            }
+            .tint(.green)
         }
     }
 } 

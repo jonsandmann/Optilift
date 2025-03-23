@@ -166,28 +166,17 @@ struct WorkoutDetailView: View {
     
     var body: some View {
         List {
-            Section {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(formatDate(workout.date ?? Date()))
-                        .font(.headline)
-                    
-                    Text("Total Volume: \(formatVolume(workoutVolume())) lbs")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.vertical, 4)
-            }
+            WorkoutHeaderView(date: workout.date ?? Date(), volume: workoutVolume())
             
-            ForEach(setsByExercise, id: \.0) { exerciseName, sets in
-                Section(exerciseName) {
-                    ForEach(sets) { set in
-                        SetRowView(set: set, setToEdit: $setToEdit, deleteSet: deleteSet, onReassignSet: { set in
-                            selectedSet = set
-                            showingReassignSheet = true
-                        })
-                    }
+            WorkoutSetsListView(
+                setsByExercise: setsByExercise,
+                setToEdit: $setToEdit,
+                deleteSet: deleteSet,
+                onReassignSet: { set in
+                    selectedSet = set
+                    showingReassignSheet = true
                 }
-            }
+            )
         }
         .navigationTitle("Workout Details")
         .sheet(item: $setToEdit) { set in
@@ -206,6 +195,87 @@ struct WorkoutDetailView: View {
             try viewContext.save()
         } catch {
             print("Error deleting set: \(error)")
+        }
+    }
+}
+
+struct WorkoutHeaderView: View {
+    let date: Date
+    let volume: Double
+    
+    private func formatVolume(_ volume: Double) -> String {
+        return NumberFormatter.volumeFormatter.string(from: NSNumber(value: volume)) ?? "0"
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
+    }
+    
+    var body: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(formatDate(date))
+                    .font(.headline)
+                
+                Text("Total Volume: \(formatVolume(volume)) lbs")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 4)
+        }
+    }
+}
+
+struct WorkoutSetsListView: View {
+    let setsByExercise: [(String, [CDWorkoutSet])]
+    @Binding var setToEdit: CDWorkoutSet?
+    let deleteSet: (CDWorkoutSet) -> Void
+    let onReassignSet: (CDWorkoutSet) -> Void
+    
+    var body: some View {
+        ForEach(setsByExercise, id: \.0) { exerciseName, sets in
+            ExerciseSectionView(
+                exerciseName: exerciseName,
+                sets: sets,
+                setToEdit: $setToEdit,
+                deleteSet: deleteSet,
+                onReassignSet: onReassignSet
+            )
+        }
+    }
+}
+
+struct ExerciseSectionView: View {
+    let exerciseName: String
+    let sets: [CDWorkoutSet]
+    @Binding var setToEdit: CDWorkoutSet?
+    let deleteSet: (CDWorkoutSet) -> Void
+    let onReassignSet: (CDWorkoutSet) -> Void
+    @Environment(\.managedObjectContext) private var viewContext
+    
+    var body: some View {
+        Section(exerciseName) {
+            ForEach(sets) { set in
+                SetRowView(set: set, setToEdit: $setToEdit, deleteSet: deleteSet, duplicateSet: { set in
+                    // Create a new set with the same properties but current timestamp
+                    let newSet = CDWorkoutSet(context: viewContext)
+                    newSet.ensureUUID()
+                    newSet.reps = set.reps
+                    newSet.weight = set.weight
+                    newSet.exercise = set.exercise
+                    newSet.date = Date()
+                    newSet.workout = set.workout
+                    
+                    do {
+                        try viewContext.save()
+                    } catch {
+                        print("Error duplicating set: \(error)")
+                    }
+                })
+            }
         }
     }
 }
