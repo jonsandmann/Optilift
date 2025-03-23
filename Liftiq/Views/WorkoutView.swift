@@ -3,24 +3,10 @@ import CoreData
 
 struct WorkoutView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @FetchRequest private var todaysSets: FetchedResults<CDWorkoutSet>
     @State private var showingAddSet = false
     @State private var selectedDate = Date()
     @State private var setToEdit: CDWorkoutSet?
-    
-    init() {
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: Date())
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-        
-        _todaysSets = FetchRequest(
-            sortDescriptors: [
-                NSSortDescriptor(keyPath: \CDWorkoutSet.exercise?.name, ascending: true),
-                NSSortDescriptor(keyPath: \CDWorkoutSet.date, ascending: false)
-            ],
-            predicate: NSPredicate(format: "date >= %@ AND date < %@", startOfDay as NSDate, endOfDay as NSDate)
-        )
-    }
+    @State private var todaysSets: [CDWorkoutSet] = []
     
     private var todaysVolume: Double {
         todaysSets.reduce(0.0) { $0 + (Double($1.reps) * $1.weight) }
@@ -35,7 +21,7 @@ struct WorkoutView: View {
     var body: some View {
         List {
             Section {
-                VolumeCardView(volume: todaysVolume, sets: Array(todaysSets))
+                VolumeCardView(volume: todaysVolume, sets: todaysSets)
             }
             AddSetButtonView(showingAddSet: $showingAddSet)
             SetsListView(setsByExercise: setsByExercise, setToEdit: $setToEdit, deleteSet: deleteSet, duplicateSet: duplicateSet)
@@ -48,12 +34,35 @@ struct WorkoutView: View {
         .sheet(item: $setToEdit) { set in
             EditSetView(set: set)
         }
+        .onAppear {
+            fetchTodaysSets()
+        }
+    }
+    
+    private func fetchTodaysSets() {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        
+        let request = CDWorkoutSet.fetchRequest()
+        request.sortDescriptors = [
+            NSSortDescriptor(keyPath: \CDWorkoutSet.exercise?.name, ascending: true),
+            NSSortDescriptor(keyPath: \CDWorkoutSet.date, ascending: false)
+        ]
+        request.predicate = NSPredicate(format: "date >= %@ AND date < %@", startOfDay as NSDate, endOfDay as NSDate)
+        
+        do {
+            todaysSets = try viewContext.fetch(request)
+        } catch {
+            print("Error fetching today's sets: \(error)")
+        }
     }
     
     private func deleteSet(_ set: CDWorkoutSet) {
         viewContext.delete(set)
         do {
             try viewContext.save()
+            fetchTodaysSets() // Refresh the list after deletion
         } catch {
             print("Error deleting set: \(error)")
         }
@@ -70,6 +79,7 @@ struct WorkoutView: View {
         
         do {
             try viewContext.save()
+            fetchTodaysSets() // Refresh the list after duplication
         } catch {
             print("Error duplicating set: \(error)")
         }
