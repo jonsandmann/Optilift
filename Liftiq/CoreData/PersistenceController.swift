@@ -76,8 +76,31 @@ class PersistenceController {
         return status
     }
     
-    func clearAllData() {
-        // Delete the persistent store
+    func clearAllData() async {
+        // First, delete all records from CloudKit
+        if useCloudKit {
+            do {
+                let container = CKContainer(identifier: "iCloud.optimizedliving.Liftiq")
+                let database = container.privateCloudDatabase
+                
+                // Delete all records for each entity type
+                let entities = ["CDWorkoutSet", "CDExercise", "CDWorkout"]
+                for entityName in entities {
+                    let query = CKQuery(recordType: entityName, predicate: NSPredicate(value: true))
+                    let (matchResults, _) = try await database.records(matching: query)
+                    for (_, result) in matchResults {
+                        if case .success(let record) = result {
+                            try await database.deleteRecord(withID: record.recordID)
+                        }
+                    }
+                }
+                print("[CloudKit] Successfully cleared all records from CloudKit")
+            } catch {
+                print("[CloudKit] Error clearing CloudKit data: \(error)")
+            }
+        }
+        
+        // Then delete the local persistent store
         guard let storeURL = container.persistentStoreDescriptions.first?.url else { return }
         
         do {
@@ -88,9 +111,9 @@ class PersistenceController {
                 at: storeURL,
                 options: nil
             )
-            print("Successfully cleared all data")
+            print("Successfully cleared local data")
         } catch {
-            print("Error clearing data: \(error)")
+            print("Error clearing local data: \(error)")
         }
     }
 } 

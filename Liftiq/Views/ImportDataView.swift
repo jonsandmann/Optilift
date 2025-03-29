@@ -57,8 +57,10 @@ struct ImportDataView: View {
                     .padding(.horizontal)
                     
                     Button(action: {
-                        PersistenceController.shared.clearAllData()
-                        errorMessage = "All data cleared successfully"
+                        Task {
+                            await PersistenceController.shared.clearAllData()
+                            errorMessage = "All data cleared successfully"
+                        }
                     }) {
                         Label("Clear All Data", systemImage: "trash")
                             .font(.headline)
@@ -143,7 +145,7 @@ struct ImportDataView: View {
                 let weightIndex = headerRow.firstIndex(of: "weight_lbs")!
                 
                 // Group sets by date
-                var setsByDate: [Date: [(exercise: String, reps: Int16, weight: Double)]] = [:]
+                var setsByDate: [Date: [(exercise: String, reps: Int16, weight: Double, originalDate: Date)]] = [:]
                 
                 // Process each row
                 for (index, row) in rows.enumerated().dropFirst() {
@@ -182,8 +184,9 @@ struct ImportDataView: View {
                         continue
                     }
                     
-                    let set = (exercise: exerciseName, reps: reps, weight: weight)
-                    setsByDate[date, default: []].append(set)
+                    let normalizedDate = DateFormatter.normalizeToMidnight(date)
+                    let set = (exercise: exerciseName, reps: reps, weight: weight, originalDate: date)
+                    setsByDate[normalizedDate, default: []].append(set)
                     
                     // Update progress
                     await MainActor.run {
@@ -215,7 +218,7 @@ struct ImportDataView: View {
                         workoutSet.ensureUUID()
                         workoutSet.reps = Int32(set.reps)
                         workoutSet.weight = set.weight
-                        workoutSet.date = date
+                        workoutSet.date = set.originalDate  // Use the original date with time
                         workoutSet.exercise = getOrCreateExercise(name: set.exercise)
                         workoutSet.workout = workout
                         
@@ -295,9 +298,15 @@ enum ImportError: LocalizedError {
 extension DateFormatter {
     static let yyyyMMdd: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         return formatter
     }()
+    
+    static func normalizeToMidnight(_ date: Date) -> Date {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day], from: date)
+        return calendar.date(from: components) ?? date
+    }
 }
 
 #Preview {

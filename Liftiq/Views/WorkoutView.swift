@@ -31,6 +31,11 @@ struct WorkoutView: View {
         .sheet(isPresented: $showingAddSet) {
             AddSetView()
         }
+        .onChange(of: showingAddSet) { oldValue, newValue in
+            if !newValue { // Sheet was dismissed
+                fetchTodaysSets()
+            }
+        }
         .sheet(item: $setToEdit) { set in
             EditSetView(set: set)
         }

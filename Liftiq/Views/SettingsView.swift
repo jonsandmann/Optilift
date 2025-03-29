@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State private var showingClearConfirmation = false
     @State private var showingOnboarding = false
+    @State private var showingExportSheet = false
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var cloudKitStatus: CKAccountStatus = .couldNotDetermine
     
@@ -67,6 +68,12 @@ struct SettingsView: View {
             }
             
             Section("Data") {
+                Button {
+                    showingExportSheet = true
+                } label: {
+                    Label("Export Data", systemImage: "square.and.arrow.up")
+                }
+                
                 Button(role: .destructive) {
                     showingClearConfirmation = true
                 } label: {
@@ -96,6 +103,9 @@ struct SettingsView: View {
             OnboardingView {
                 showingOnboarding = false
             }
+        }
+        .sheet(isPresented: $showingExportSheet) {
+            ExportDataView()
         }
         .onAppear {
             checkCloudKitStatus()
